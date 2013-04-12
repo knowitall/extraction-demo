@@ -1,0 +1,16 @@
+10 < len(sent) <= 20                  37.4762
+arg2 is proper                         2.1897
+np after arg2                          -2.752
+np before arg1                       -25.4093
+prep after arg2                       -3.4831
+prep before arg1                      43.2814
+rel contains vbd                     -59.3927
+rel ends with for                     18.9483
+rel ends with in                      30.9997
+rel ends with of                       1.8802
+rel ends with on                       -7.864
+rel is VW+P                          -59.3927
+sent ends w/arg2                       8.5339
+sent starts w/arg1                   -23.6892
+verb after arg2                      -25.5007
+Intercept                             26.2064

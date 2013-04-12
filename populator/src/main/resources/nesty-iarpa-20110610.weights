@@ -1,0 +1,27 @@
+0 < len(sent) <= 10                        -1.0931
+10 < len(sent) <= 20                        0.0123
+20 < len(sent)                              1.0931
+arg1 contains pos pronoun                  -1.0968
+arg1 contains pronoun                      -2.7047
+arg1 is proper                              1.1954
+arg2 contains pos pronoun                  -0.2091
+arg2 contains pronoun                      -1.0168
+arg2 is proper                              0.6389
+extr covers phrase                          0.9778
+np after arg2                               0.6896
+np before arg1                             -1.2931
+prep after arg2                              0.566
+prep before arg1                            0.4623
+rel contains vb                           136.2781
+rel contains vbd                           -0.8903
+rel contains vbg                           -2.2481
+rel contains vbn                            0.4446
+rel contains vbp                           -1.3021
+rel contains vbz                           -1.4775
+rel is VW+P                                -0.0112
+rel is a single verb                       -0.7164
+sent ends w/arg2                            0.0954
+sent starts w/arg1                          0.2373
+verb after arg2                            -0.0283
+which|who|that before rel                  -3.2735
+Intercept                                   0.4594
