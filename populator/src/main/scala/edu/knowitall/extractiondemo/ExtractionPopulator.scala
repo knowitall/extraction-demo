@@ -3,19 +3,22 @@ import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import edu.knowitall.extractiondemo.orm._
-import scala.actors.threadpool.AtomicInteger
+import java.util.concurrent.atomic.AtomicInteger
 import scopt.OptionParser
 import ExtractionPopulator._
 import org.slf4j.LoggerFactory
 import edu.knowitall.tool.parse.graph.DependencyGraph
 import edu.knowitall.extractiondemo.orm._
 import edu.knowitall.collection.immutable.Interval
+import edu.knowitall.tool.tokenize.OpenNlpTokenizer
+import edu.knowitall.tool.postag.OpenNlpPostagger
 import edu.knowitall.tool.chunk.OpenNlpChunker
 import edu.knowitall.tool.sentence.OpenNlpSentencer
 import edu.knowitall.tool.chunk.ChunkedToken
 import edu.knowitall.tool.stem.MorphaStemmer
 import edu.knowitall.tool.stem.Lemmatized
 import edu.knowitall.common.Resource
+import edu.knowitall.common.Timing
 import scala.io.Source
 import edu.knowitall.chunkedextractor.ReVerb
 import edu.knowitall.chunkedextractor.Extractor
@@ -215,8 +218,16 @@ abstract class ExtractionPopulator(
     new ChunkedEntityExtractor.NestyEntityExtractor,
     new OpenParseEntityExtractor), skipFirstSentence)
 
-  // val sentenceExtractor = new OpenNlpSentencer
-  val chunker = new OpenNlpChunker
+  val chunkerModel = OpenNlpChunker.loadDefaultModel
+  val postagModel = OpenNlpPostagger.loadDefaultModel
+  val tokenModel = OpenNlpTokenizer.loadDefaultModel
+  val chunkerLocal = new ThreadLocal[OpenNlpChunker] {
+    override def initialValue = {
+      val tokenizer = new OpenNlpTokenizer(tokenModel)
+      val postagger = new OpenNlpPostagger(postagModel, tokenizer)
+      new OpenNlpChunker(chunkerModel, postagger)
+    }
+  }
 
   val documentId = new AtomicInteger(0)
   val sentenceId = new AtomicInteger(0)
@@ -246,7 +257,9 @@ abstract class ExtractionPopulator(
   def extractSentence(line: Sentence) = {
     for {
       extractor <- extractors;
-      entity <- extractor.extract(line, relationId)
+      entity <- extractor.synchronized {
+        extractor.extract(line, relationId)
+      }
     } yield {
       // add types
       /*
@@ -289,6 +302,7 @@ abstract class ExtractionPopulator(
       else None
     val text = tagRegex.replaceAllIn(graph.map(_.text) getOrElse string, "")
 
+    val chunker = chunkerLocal.get()
     val chunked = chunker(text)
     val lemmatized = chunked map MorphaStemmer.lemmatizeToken
     val line = Sentence(Some(lemmatized), graph)
@@ -317,9 +331,17 @@ abstract class ExtractionPopulator(
   }
 
   def extractFile(file: File) = {
-    Resource.using(Source.fromFile(file, "UTF8")) { source =>
-      (for (string <- source.getLines) yield (extractLine(string))).toList
-    }
+    print("  * Reading lines into memory... ")
+    val lines = Timing.timeThen {
+      Resource.using(Source.fromFile(file, "UTF8")) { source =>
+        source.getLines.toList
+      }
+    } { ns => println(Timing.Seconds.format(ns)) }
+
+    print("  * Finding extractions in the lines... ")
+    Timing.timeThen {
+      lines.par.map(extractLine)
+    } { ns => println(Timing.Seconds.format(ns)) }
   }
 
   def persist(entity: SentenceEntity)
@@ -333,11 +355,24 @@ abstract class ExtractionPopulator(
     entity.path = file.getAbsolutePath
     persist(entity)
 
-    for (sentenceEntity <- extractFile(file)) {
-      print(".")
+    val extractions = extractFile(file)
 
-      sentenceEntity.document = entity
-      persist(sentenceEntity)
+    print("  * Persisting extractions")
+    var i = 0
+    Timing.timeThen {
+      for (sentenceEntity <- extractions) {
+        i = i + 1
+        if (i % 100 == 0) {
+          print(".")
+        }
+
+        sentenceEntity.document = entity
+        persist(sentenceEntity)
+      }
+    } { ns =>
+      println(" " + Timing.Seconds.format(ns))
     }
+
+    println(i + " sentences persisted")
   }
 }

@@ -27,6 +27,8 @@ object LuceneExtractionPopulator {
     def taggerPath: Option[String]
 
     def solrUrl: String // "jdbc:mysql://localhost/kdd?rewriteBatchedStatements=true";
+
+    def outputFile: Option[File]
   }
 
   def main(args: Array[String]) {
@@ -36,6 +38,8 @@ object LuceneExtractionPopulator {
 
       var corpusName: String = ""
 
+      var outputFile: Option[File] = None
+
       var taggerPath: Option[String] = None
 
       var solrUrl: String = _
@@ -44,6 +48,7 @@ object LuceneExtractionPopulator {
     val parser = new OptionParser("extrpop") {
       arg("directory", "text input directory", { path: String => settings.inputDirectory = new File(path) })
       arg("connection", "SOLR url", { s: String => settings.solrUrl = s })
+      opt("o", "output-file", "optional output file for json", { file => settings.outputFile = Some(new File(file)) })
       opt("r", "recursive", "recursively descent into subdirectories", { settings.recursive = true })
       opt("c", "corpus", "corpus name", { s: String => settings.corpusName = s })
 
@@ -63,6 +68,7 @@ object LuceneExtractionPopulator {
     def solrUrl = url(settings.solrUrl)
     val http = Http()
 
+    val writer = settings.outputFile.map(new java.io.PrintWriter(_))
     val extractor = new ExtractionPopulator(true) {
       def persist(documentEntity: DocumentEntity) {}
       def persist(sentenceEntity: SentenceEntity) {
@@ -74,25 +80,26 @@ object LuceneExtractionPopulator {
             <field name="rel">{ extr.rel }</field>
             <field name="arg2">{ extr.arg2 }</field>
 
+            <field name="context"></field>
+
             <field name="confidence">{ extr.confidence }</field>
 
             <field name="sentence">{ sentenceEntity.text }</field>
 
             <field name="extractor">{ extr.extractor }</field>
             <field name="url">{ sentenceEntity.document }</field>
-            <field name="corpus">{ settings.corpusName }</field>
           </doc>
         }
         val xml = <add>{docs}</add>
+        val xmlString = xml.toString
 
         val headers = Map("Content-type" -> "application/xml")
-        val req = solrUrl / "update" << xml.toString <:< headers
+        val req = solrUrl / "update" << xmlString <:< headers
+        writer foreach (_.println(xmlString))
         http(req OK as.String).either() match {
           case Right(content) =>
-          case Left(StatusCode(404)) => println("Not found")
-          case Left(StatusCode(code)) =>
-            System.err.println("error code: " + code.toString)
-            System.err.println(xml)
+          case Left(StatusCode(404)) => System.err.println("404 not found: " + settings.solrUrl)
+          case Left(code) => System.err.println("error code: " + code.toString)
         }
       }
     }
