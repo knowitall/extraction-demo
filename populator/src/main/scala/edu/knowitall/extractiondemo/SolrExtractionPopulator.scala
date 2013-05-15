@@ -15,7 +15,7 @@ import edu.knowitall.extractiondemo.orm.DocumentEntity
 import edu.knowitall.extractiondemo.orm.SentenceEntity
 import scopt.OptionParser
 
-object LuceneExtractionPopulator {
+object SolrExtractionPopulator {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   abstract class Settings {
@@ -87,7 +87,7 @@ object LuceneExtractionPopulator {
             <field name="sentence">{ sentenceEntity.text }</field>
 
             <field name="extractor">{ extr.extractor }</field>
-            <field name="url">{ sentenceEntity.document }</field>
+            <field name="url">{ sentenceEntity.document.path }</field>
           </doc>
         }
         val xml = <add>{docs}</add>

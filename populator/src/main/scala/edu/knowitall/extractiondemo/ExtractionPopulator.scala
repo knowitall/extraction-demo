@@ -257,9 +257,8 @@ abstract class ExtractionPopulator(
   def extractSentence(line: Sentence) = {
     for {
       extractor <- extractors;
-      entity <- extractor.synchronized {
+      entity <-
         extractor.extract(line, relationId)
-      }
     } yield {
       // add types
       /*

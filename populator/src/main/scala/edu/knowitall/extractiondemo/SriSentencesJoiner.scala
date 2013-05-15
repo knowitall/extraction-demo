@@ -33,7 +33,7 @@ object SriSentencesJoiner  {
       var parser: String = "stanford"
     }
 
-    val parser = new OptionParser("applypat") {
+    val parser = new OptionParser("joiner") {
       arg("input", "sentences input directory", { path: String => settings.inputDirectory = new File(path) })
       arg("output", "sentences output directory", { path: String => settings.outputDirectory = new File(path) })
 
@@ -48,24 +48,30 @@ object SriSentencesJoiner  {
   def run(settings: Settings) = {
     import scala.collection.JavaConversions._
     logger.info("Listing files...")
-    val files: Iterable[File] = FileUtils.listFiles(settings.inputDirectory, Array("gz"), true).asScala
+    val files: Iterable[File] = FileUtils.listFiles(settings.inputDirectory, null, true).asScala
     logger.info("File count: " + files.size)
 
-    def collapseName(name: String) = {
-      name.replaceAll("\\d+\\.sentences$", "sentences")
+    val nameRegex = """(.+)_seg_\d+\.\d+_\d+""".r
+    def collapseName(name: String) = name match {
+      case nameRegex(name) => Some(name)
+      case _ => None
     }
 
     val i = new AtomicInteger
     for (file <- files) {
-      logger.info("Processing " + file.getName + " (" + i.getAndIncrement + "/" + files.size + ")...")
-
-      val output = new File(settings.outputDirectory, collapseName(file.getName))
-      Resource.using(Source.fromFile(file)) { source =>
-        Resource.using(new PrintWriter(new OutputStreamWriter(new FileOutputStream(output, true), "UTF8"))) { writer =>
-          for (line <- source.getLines) {
-            writer.println(line)
+      collapseName(file.getName) match {
+        case Some(name) =>
+          logger.info("Processing " + file.getName + " --> " + name + " (" + i.getAndIncrement + "/" + files.size + ")...")
+          val output = new File(settings.outputDirectory, name)
+          Resource.using(Source.fromFile(file)) { source =>
+            Resource.using(new PrintWriter(new OutputStreamWriter(new FileOutputStream(output, true), "UTF8"))) { writer =>
+              for (line <- source.getLines) {
+                writer.println(line)
+              }
+            }
           }
-        }
+        case None =>
+	      logger.info("Skipping " + file.getName)
       }
     }
   }
