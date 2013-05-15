@@ -1,0 +1,80 @@
+@(form: Form[Query], results: Option[ResultSet] = None)
+
+@helper.main("Open Information Extractions") {
+  <!DOCTYPE html>
+  <html>
+  <body>
+
+  <div class="page-header">
+    <h1><a href="/">KDD Open Information Extraction</a></h1>
+  </div>
+
+  <!-- search form -->
+  @helper.form(action = routes.Application.submit, 'class -> "well form-search") {
+    <!--
+    <div class="example-queries offset2">
+      <h3>Example Queries:</h3>
+      <ul>
+        <li><a href="#">Who invented the light bulb?</a></li>
+        <li><a href="#">example query 2</a></li>
+        <li><a href="#">example query 3</a></li>
+      </ul>
+    </div>
+    -->
+
+    <div style="height: 10px" /></div>
+
+    <div class="form-wrapper">
+      @helper.inputText(
+          form("arg1"),
+          '_class -> "dl-horizontal",
+          '_label -> "Argument 1:",
+          'placeholder -> "what/who")
+
+      @helper.inputText(
+          form("rel"),
+          '_class -> "dl-horizontal",
+          '_label -> "Relation:",
+          'placeholder -> "verb phrase")
+
+      @helper.inputText(
+          form("arg2"),
+          '_class -> "dl-horizontal",
+          '_label -> "Argument 2:",
+          'placeholder -> "what/who")
+
+      <div height="10 px" />
+
+      @helper.select(
+        form("extractor"), 
+        options=("" -> "All") +: (Query.extractors zip Query.extractors),
+        '_class -> "dl-horizontal",
+        '_label -> "Extractor:")
+
+      @helper.inputRadioGroup(
+        form("groupBy"),
+        options = ExtractionPart.parts.map(part => (part.short, part.name)),
+        '_class -> "dl-horizontal",
+        '_label -> "Grouping results by:"
+      )
+
+      <div class="search">
+        <button class="btn">Search</button>
+      </div>
+    </div>
+    </div>
+  }
+
+  <!-- results container -->
+  <div wicket:id="results-container" class="results-container">
+
+    <!-- actual results -->
+    @results match {
+      case Some(results) => { @helper.results(results) }
+      case None => { }
+    }
+  </div>
+
+  </body>
+  </html>
+}

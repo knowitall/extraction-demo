@@ -1,0 +1,20 @@
+@(results: ResultSet)
+
+Number of results: @results.results.size
+@for(result <- results.results) {
+  <div class="group-title">
+  <h4><span id="group-title">@result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></h4>
+  <a class="open-close"></a>
+</div>
+
+<div id="resultgroups-container" class="resultgroup-list">
+  @for(instance <- result.instances) {
+  <div id="resultgroup-list">
+    <span id="arg1" class="result-arg1">@instance.arg1</span>
+    <span id="rel" class="result-relation">@instance.rel</span>
+    <span id="arg2" class="result-arg2">@instance.arg2</span>
+    <a id="source" target="_blank" href="#">(<span id="count">@instance.count</span>)</a>
+  </div>
+  }
+</div>
+}
