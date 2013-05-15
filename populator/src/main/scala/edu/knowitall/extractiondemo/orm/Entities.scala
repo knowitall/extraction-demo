@@ -29,7 +29,6 @@ class SentenceEntity {
 
 class TypeEntity {
   var id: Long = _
-  var sentence: SentenceEntity = _
   var descriptor: String = _
   var text: String = _
   var interval: Interval = _
@@ -58,4 +57,21 @@ class ExtractionEntity {
   var arg1Interval: Interval = _
   var relInterval: Interval = _
   var arg2Interval: Interval = _
+
+  def intervals = Iterable(arg1Interval, relInterval, arg2Interval)
+  def containedTypes(types: Iterable[TypeEntity]) = {
+    types.filter(typ => intervals.exists(_ superset typ.interval))
+  }
+
+  def arg1Types(types: Iterable[TypeEntity]) = {
+    types.filter(arg1Interval superset _.interval)
+  }
+
+  def relTypes(types: Iterable[TypeEntity]) = {
+    types.filter(relInterval superset _.interval)
+  }
+
+  def arg2Types(types: Iterable[TypeEntity]) = {
+    types.filter(arg2Interval superset _.interval)
+  }
 }

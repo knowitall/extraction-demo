@@ -1,19 +1,17 @@
 package edu.knowitall.extractiondemo
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-
 import dispatch._
 import dispatch.Defaults._
 import edu.knowitall.common.Resource.using
 import edu.knowitall.extractiondemo.orm.DocumentEntity
 import edu.knowitall.extractiondemo.orm.SentenceEntity
 import scopt.OptionParser
+import edu.knowitall.taggers.tag.TaggerCollection
 
 object SolrExtractionPopulator {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -61,7 +59,7 @@ object SolrExtractionPopulator {
   }
 
   def run(settings: Settings) = {
-    // val taggers = (settings.taggerPath map TaggerCollection.fromPath) getOrElse (new TaggerCollection)
+    val taggers = (settings.taggerPath map TaggerCollection.fromPath) getOrElse (new TaggerCollection)
 
     import dispatch._
 
@@ -69,7 +67,7 @@ object SolrExtractionPopulator {
     val http = Http()
 
     val writer = settings.outputFile.map(new java.io.PrintWriter(_))
-    val extractor = new ExtractionPopulator(true) {
+    val extractor = new ExtractionPopulator(taggers, true) {
       def persist(documentEntity: DocumentEntity) {}
       def persist(sentenceEntity: SentenceEntity) {
         val docs = for (extr <- sentenceEntity.extractions) yield {
@@ -79,6 +77,16 @@ object SolrExtractionPopulator {
             <field name="arg1">{ extr.arg1 }</field>
             <field name="rel">{ extr.rel }</field>
             <field name="arg2">{ extr.arg2 }</field>
+
+            { extr.arg1Types(sentenceEntity.types).map { typ =>
+              <field name="arg1_types">{ typ.descriptor }</field>
+            }}
+            { extr.relTypes(sentenceEntity.types).map { typ =>
+              <field name="rel_types">{ typ.descriptor }</field>
+            }}
+            { extr.arg2Types(sentenceEntity.types).map { typ =>
+              <field name="arg2_types">{ typ.descriptor }</field>
+            }}
 
             <field name="context"></field>
 

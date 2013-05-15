@@ -30,6 +30,7 @@ import edu.knowitall.chunkedextractor.R2A2
 import edu.knowitall.ollie.Ollie
 import edu.knowitall.ollie.confidence.OllieConfidenceFunction
 import edu.knowitall.ollie.confidence.OllieConfidenceFunction
+import edu.knowitall.taggers.tag.TaggerCollection
 
 object ExtractionPopulator {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -207,16 +208,17 @@ object ExtractionPopulator {
 
 abstract class ExtractionPopulator(
   val extractors: List[EntityExtractor],
+  val taggers: TaggerCollection,
   val skipFirstSentence: Boolean) {
 
   import ExtractionPopulator._
 
-  def this(skipFirstSentence: Boolean) = this(List(
+  def this(taggers: TaggerCollection, skipFirstSentence: Boolean) = this(List(
     new ChunkedEntityExtractor.ReVerbEntityExtractor,
     new ChunkedEntityExtractor.R2A2EntityExtractor,
     new ChunkedEntityExtractor.RelnounEntityExtractor,
     new ChunkedEntityExtractor.NestyEntityExtractor,
-    new OpenParseEntityExtractor), skipFirstSentence)
+    new OpenParseEntityExtractor), taggers, skipFirstSentence)
 
   val chunkerModel = OpenNlpChunker.loadDefaultModel
   val postagModel = OpenNlpPostagger.loadDefaultModel
@@ -235,24 +237,24 @@ abstract class ExtractionPopulator(
   val tokenId = new AtomicInteger(0)
   val typeId = new AtomicInteger(0)
 
-  /*
-  def typesFromSentence(sentence: NlpSentence) = {
-    // taggers.tag(sentence)
+  def typesFromSentence(sentence: Sentence): Set[TypeEntity] = {
+    val chunked = sentence.chunked.toSet
+    chunked.flatMap { chunked =>
+      val types = taggers.tag(chunked)
 
-    for (typ <- sentence.types) yield {
-      val entity = new TypeEntity()
+      for (typ <- types) yield {
+        val entity = new TypeEntity()
 
-      entity.setId(typeId.getAndIncrement)
+        entity.id = typeId.getAndIncrement
 
-      entity.setDescriptor(typ.descriptor)
-      entity.setText(typ.text)
-      entity.setStart(typ.range.getStart)
-      entity.setEnd(typ.range.getEnd)
+        entity.descriptor = typ.descriptor
+        entity.text = typ.text
+        entity.interval = typ.interval
 
-      entity
+        entity
+      }
     }
   }
-  */
 
   def extractSentence(line: Sentence) = {
     for {
@@ -260,18 +262,6 @@ abstract class ExtractionPopulator(
       entity <-
         extractor.extract(line, relationId)
     } yield {
-      // add types
-      /*
-      val types = for {
-        typ <- typeEntities
-        interval = typ.interval
-        if (entity.getRelRange.contains(interval) ||
-          entity.getArg1Range.contains(interval) ||
-          entity.getArg2Range.contains(interval))
-      } yield (typ)
-      entity.setTypes(toJavaTreeSet(types))
-      */
-
       entity
     }
   }
@@ -310,10 +300,8 @@ abstract class ExtractionPopulator(
     entity.id = sentenceId.getAndIncrement
     entity.text = text
 
-    /*
-    val typeEntities = typesFromSentence(sentence)
-    typeEntities foreach (_.setSentence(entity))
-    */
+    val typeEntities = typesFromSentence(line)
+    entity.types = typeEntities
 
     def shortEnough(extr: ExtractionEntity) = extr.arg1Interval.size < 255 && extr.arg2Interval.size < 255 && extr.relInterval.size < 255
     val extrEntities = extractSentence(line) filter shortEnough

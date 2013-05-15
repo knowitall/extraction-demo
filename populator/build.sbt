@@ -14,11 +14,13 @@ libraryDependencies ++= Seq(
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-parse-malt" % "2.4.1",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-chunk-opennlp" % "2.4.1",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-sentence-opennlp" % "2.4.1",
+      "edu.washington.cs.knowitall.nlptools" %% "nlptools-typer-stanford" % "2.4.1",
+      "edu.washington.cs.knowitall.taggers" %% "taggers" % "1.0.0-SNAPSHOT",
       "edu.washington.cs.knowitall" % "reverb-core" % "1.4.2",
       "org.slf4j" % "slf4j-api" % "1.7.2",
       "ch.qos.logback" % "logback-classic" % "1.0.9",
       "ch.qos.logback" % "logback-core" % "1.0.9",
       "com.github.scopt" %% "scopt" % "2.1.0",
-      "net.databinder.dispatch" %% "dispatch-core" % "0.10.0",
+      "net.databinder.dispatch" %% "dispatch-core" % "0.9.5",
       "commons-io" % "commons-io" % "2.4"
     )
