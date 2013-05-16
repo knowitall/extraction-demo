@@ -2,7 +2,7 @@ package models
 
 sealed abstract class ExtractionPart(val name: String, val short: String) {
   def apply(instance: ExtractionInstance): String
-  def apply(query: Query): Option[String]
+  def apply(query: Query): PartQuery
 }
 object ExtractionPart {
   def parse(string: String) = string match {
@@ -15,13 +15,13 @@ object ExtractionPart {
 }
 case object Argument1 extends ExtractionPart("Argument 1", "arg1") {
   def apply(instance: ExtractionInstance): String = instance.arg1
-  def apply(query: Query): Option[String] = query.arg1
+  def apply(query: Query): PartQuery = query.arg1
 }
 case object Relation extends ExtractionPart("Relation", "rel") {
   def apply(instance: ExtractionInstance): String = instance.rel
-  def apply(query: Query): Option[String] = query.rel
+  def apply(query: Query): PartQuery = query.rel
 }
 case object Argument2 extends ExtractionPart("Argument 2", "arg2") {
   def apply(instance: ExtractionInstance): String = instance.arg2
-  def apply(query: Query): Option[String] = query.arg2
+  def apply(query: Query): PartQuery = query.arg2
 }

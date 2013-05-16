@@ -1,6 +1,14 @@
-@(results: ResultSet)
+@(results: ResultSet, queryString: Option[String])
 
+<p>
+@queryString match{
+  case Some(queryString) => { Query: @queryString }
+  case None => { }
+}
+</p>
+<p>
 Number of results: @results.results.size
+</p>
 @for(result <- results.results) {
   <div class="group-title">
   <h4><span id="group-title">@result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></h4>

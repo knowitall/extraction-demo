@@ -14,8 +14,9 @@ import models.ExtractionPart
 
 object Application extends Controller {
   def searchForm: Form[Query] = {
+    import play.api.data.validation.Constraints._
     def unapply(query: Query): Option[(Option[String], Option[String], Option[String], Option[String], String)] = {
-      Some(query.arg1.map(_.toString), query.rel.map(_.toString), query.arg2.map(_.toString), query.extractor, query.groupBy.short)
+      Some(query.arg1.entryString, query.rel.entryString, query.arg2.entryString, query.extractor, query.groupBy.short)
     }
     def apply(arg1: Option[String], rel: Option[String], arg2: Option[String], extractor: Option[String], groupBy: String) = {
       Query(arg1, rel, arg2, extractor, ExtractionPart.parse(groupBy))
@@ -27,26 +28,29 @@ object Application extends Controller {
         "rel" -> optional(text),
         "arg2" -> optional(text),
         "extractor" -> optional(text),
-        "groupBy" -> text)(apply)(unapply)).verifying("All search fields cannot be empty", { query =>
-          query.arg1.isDefined || query.rel.isDefined || query.arg2.isDefined
+        "groupBy" -> text)(apply)(unapply)) verifying("All search fields cannot be empty", { query =>
+          query.arg1.used || query.rel.used || query.arg2.used
         }))
-
   }
 
   def index = Action {
-    Ok(views.html.search(searchForm))
+    Ok(views.html.search(searchForm.fill(Query(None, None, None))))
   }
 
   def submit = Action { implicit request =>
     searchForm.bindFromRequest.fold(
-        errors => BadRequest(views.html.search(searchForm)),
+        errors => BadRequest(views.html.search(errors)),
         query => searchResult(query))
   }
 
   def searchResult(query: Query) = {
-    val instances = executeQuery(query)
+    val instances = LuceneQueryExecutor.execute(query)
+    val queryString = LuceneQueryExecutor.luceneQueryVariables(query).foldLeft(
+        LuceneQueryExecutor.luceneQueryString(query)){ case (query, (field, value)) =>
+          query.replaceAll("%" + field + "%", "\"" + value + "\"")
+        }
     val groups = ExtractionGroup.from(query.groupBy, instances).toList
-    Ok(views.html.search(searchForm.fill(query), Some(ResultSet(groups))))
+    Ok(views.html.search(searchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
   }
 
   def search(arg1: Option[String], rel: Option[String], arg2: Option[String]) = Action {
@@ -54,25 +58,4 @@ object Application extends Controller {
     searchResult(query)
   }
 
-  def executeQuery(q: Query) = {
-    Logger.info("query for: " + q)
-
-    import jp.sf.amateras.solr.scala._
-
-    val client = new SolrClient("http://localhost:8983/solr")
-
-    val queryString = q.used.map(p => "+" + p.short + ": %" + p.short + "%").mkString(" ") +
-      (q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" })
-    Logger.logger.debug("Lucene query: " + queryString)
-
-    val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "extractor")
-      .sortBy(q.groupBy.short, Order.asc)
-      .rows(1000)
-      .getResultAs[ExtractionInstance](Map.empty ++ q.used.map(p => p.short -> p(q).get) ++ q.extractor.map("extractor" -> _))
-
-    val list = result.documents.toList
-    Logger.info("results received: " + list.size)
-    list
-  }
 }
