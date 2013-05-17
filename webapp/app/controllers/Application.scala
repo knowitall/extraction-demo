@@ -16,7 +16,7 @@ object Application extends Controller {
   def searchForm: Form[Query] = {
     import play.api.data.validation.Constraints._
     def unapply(query: Query): Option[(Option[String], Option[String], Option[String], Option[String], String)] = {
-      Some(query.arg1.entryString, query.rel.entryString, query.arg2.entryString, query.extractor, query.groupBy.short)
+      Some((query.arg1.entryString, query.rel.entryString, query.arg2.entryString, query.extractor, query.groupBy.short))
     }
     def apply(arg1: Option[String], rel: Option[String], arg2: Option[String], extractor: Option[String], groupBy: String) = {
       Query(arg1, rel, arg2, extractor, ExtractionPart.parse(groupBy))

@@ -6,21 +6,22 @@ import models.ExtractionInstance
 
 object LuceneQueryExecutor {
   def luceneQueryString(q: Query): String = {
-    Iterable(q.usedStrings.map
-      { p => "+" + p.part.short + ":%" + p.part.short + "%"}.mkString(" "),
-      q.usedTypes.map
-      { p => "+" + p.part.short + "_types:%" + p.part.short + "_types%"}.mkString(" "),
-      (q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" })).mkString(" ")
+    Iterable(
+      q.usedStrings.map { p => p.string.zipWithIndex.map
+        { case (string, i) => "+" + p.part.short + ":%" + p.part.short + "_" + i + "%" }.mkString(" ")
+      } ++
+      q.usedTypes.map { p => p.typ.zipWithIndex.map
+        { case (typ, i) => "+" + p.part.short + "_types:%" + p.part.short + "_types_" + i + "%" }.mkString(" ")
+      } ++
+      (q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" })
+    ).mkString(" ")
   }
 
-  def luceneQueryVariables(q: Query): Map[String, String] = {
-    (Map.empty ++ q.used.map(part =>
-      (part.string, part.typ) match {
-        case (Some(string), None) => (part.part.short -> part.part(q).string.get)
-        case (None, Some(typ)) => (part.part.short + "_types" -> part.part(q).typ.get)
-        case _ => throw new IllegalArgumentException()
-      }) ++ q.extractor.map("extractor" -> _))
-  }
+  def luceneQueryVariables(q: Query): Map[String, String] =
+    Map.empty ++
+       q.usedStrings.flatMap(part => part.string.zipWithIndex.map { case (string, i) => (part.part.short + "_" + i) -> part.part(q).string(i) }) ++
+       q.usedTypes.flatMap(part => part.typ.zipWithIndex.map { case (typ, i) => (part.part.short + "_types_" + i) -> part.part(q).typ(i) }) ++
+       q.extractor.map("extractor" -> _)
 
   def execute(q: Query) = {
     Logger.info("query for: " + q)

@@ -18,26 +18,30 @@ case class Query(
     set
   }
 
-  def usedStrings = used.filter(_.string.isDefined)
-  def usedTypes = used.filter(_.typ.isDefined)
+  def usedStrings = used.filter(!_.string.isEmpty)
+  def usedTypes = used.filter(!_.typ.isEmpty)
 }
 
-case class PartQuery(string: Option[String], typ: Option[String], part: ExtractionPart) {
-  def entryString = (string, typ) match {
-    case (Some(string), None) => Some(string)
-    case (None, Some(typ)) => Some("[" + typ + "]")
-    case (None, None) => None
-    case _ => throw new IllegalArgumentException()
-  }
+case class PartQuery(string: Seq[String], typ: Seq[String], part: ExtractionPart) {
+  def entryString =
+    if (string.isEmpty && typ.isEmpty) None
+    else Some((string ++ typ.map("[" + _ + "]")).mkString("; "))
 
-  def used = string.isDefined || typ.isDefined
+  def used = !string.isEmpty || !typ.isEmpty
 }
 object PartQuery {
   val typeRegex = new Regex("""\s*\[(.*)\]\s*""")
-  def fromEntry(entry: Option[String], part: ExtractionPart) = entry match {
-    case Some(typeRegex(typ)) => PartQuery(None, Some(typ), part)
-    case Some(string) => PartQuery(Some(string), None, part)
-    case None => PartQuery(None, None, part)
+  val empty = PartQuery(Seq.empty, Seq.empty, ExtractionPart.default)
+  def fromEntry(entry: String, part: ExtractionPart) = {
+    val (strings, types) =
+      entry.split("""\s*;\s*""").foldLeft(List.empty[String], List.empty[String]) {
+        case ((strings, types), entry) => entry match {
+          case typeRegex(typ) => (strings, typ :: types)
+          case string => (string :: strings, types)
+        }
+    }
+
+    PartQuery(strings.toSeq, types.toSeq, part)
   }
 }
 
@@ -51,9 +55,9 @@ object Query {
       extractor: Option[String] = None,
       groupBy: ExtractionPart = Argument1) = {
 
-    val arg1Part = PartQuery.fromEntry(arg1, Argument1)
-    val relPart = PartQuery.fromEntry(rel, Relation)
-    val arg2Part = PartQuery.fromEntry(arg2, Argument2)
+    val arg1Part = arg1.map(PartQuery.fromEntry(_, Argument1)).getOrElse(PartQuery.empty)
+    val relPart = rel.map(PartQuery.fromEntry(_, Relation)).getOrElse(PartQuery.empty)
+    val arg2Part = arg2.map(PartQuery.fromEntry(_, Argument2)).getOrElse(PartQuery.empty)
 
     new Query(arg1Part, relPart, arg2Part,
         extractor, groupBy)

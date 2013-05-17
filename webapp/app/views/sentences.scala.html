@@ -6,8 +6,13 @@
   <h2>(@extrs.head.arg1, @extrs.head.rel, @extrs.head.arg2)</h2>
 
   <ol>
-    @extrs.map { extr =>
-      <li>@extr.sentence</li>
+  @extrs.groupBy(_.sentence).map { case (sentence, extrs) =>
+    <li>@sentence</li>
+    <ul>
+    @extrs.sortBy(_.extractor).map { extr =>
+      <li>@extr.extractor</li>
     }
+    </ul>
+  }
   </ol>
 }
