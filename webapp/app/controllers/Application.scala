@@ -49,7 +49,7 @@ object Application extends Controller {
         LuceneQueryExecutor.luceneQueryString(query)){ case (query, (field, value)) =>
           query.replaceAll("%" + field + "%", "\"" + value + "\"")
         }
-    val groups = ExtractionGroup.from(query.groupBy, instances).toList
+    val groups = ExtractionGroup.from(query.groupBy, instances).toList.sortBy(-_.instances.size)
     Ok(views.html.search(searchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
   }
 
@@ -58,4 +58,8 @@ object Application extends Controller {
     searchResult(query)
   }
 
+  def sentences(arg1: String, rel: String, arg2: String) = Action {
+    val extrs = LuceneQueryExecutor.executeExact(arg1, rel, arg2)
+    Ok(views.html.sentences(extrs))
+  }
 }
