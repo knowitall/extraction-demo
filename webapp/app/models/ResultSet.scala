@@ -1,4 +1,5 @@
 package models
 
-case class ResultSet(results: List[ExtractionGroup]) {
+case class ResultSet(groups: List[ExtractionGroup]) {
+  def instanceCount = groups.map(group => group.instances.size).sum
 }
