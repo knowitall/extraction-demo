@@ -41,7 +41,7 @@ object LuceneQueryExecutor {
     val result = client.query(queryString)
       .fields("arg1", "rel", "arg2", "sentence", "extractor")
       .sortBy(q.groupBy.short, Order.asc)
-      .rows(1000)
+      .rows(10000)
       .getResultAs[ExtractionInstance](luceneQueryVariables(q))
 
     val list = result.documents.toList
@@ -60,7 +60,7 @@ object LuceneQueryExecutor {
 
     val result = client.query(queryString)
       .fields("arg1", "rel", "arg2", "sentence", "extractor")
-      .rows(100)
+      .rows(10000)
       .getResultAs[ExtractionInstance](Map("arg1" -> arg1, "rel" -> rel, "arg2" -> arg2))
 
     val list = result.documents.toList
