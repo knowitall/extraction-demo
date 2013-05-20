@@ -6,15 +6,17 @@ import models.ExtractionInstance
 
 object LuceneQueryExecutor {
   def luceneQueryString(q: Query): String = {
-    Iterable(
+    val strings =
       q.usedStrings.map { p => p.string.zipWithIndex.map
         { case (string, i) => "+" + p.part.short + ":%" + p.part.short + "_" + i + "%" }.mkString(" ")
-      } ++
+      }
+    val types =
       q.usedTypes.map { p => p.typ.zipWithIndex.map
         { case (typ, i) => "+" + p.part.short + "_types:%" + p.part.short + "_types_" + i + "%" }.mkString(" ")
-      } ++
-      (q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" })
-    ).mkString(" ")
+      }
+    val extractor = q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" }
+
+    (strings ++ types + extractor).mkString(" ")
   }
 
   def luceneQueryVariables(q: Query): Map[String, String] =

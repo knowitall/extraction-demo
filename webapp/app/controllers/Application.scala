@@ -13,6 +13,47 @@ import models.Argument1
 import models.ExtractionPart
 
 object Application extends Controller {
+  def decodeBasicAuth(auth: String) = {
+    val baStr = auth.replaceFirst("Basic ", "")
+    val Array(user, pass) = new String(new sun.misc.BASE64Decoder().decodeBuffer(baStr), "UTF-8").split(":")
+    (user, pass)
+  }
+
+  case class User(name: String, password: String)
+  object User {
+    val users = Set(User("knowitall", "knowit!"), User("sri", "sanDi3goSol"), User("iarpa", "kay-deedee"))
+    def find(username: String, password: String) = users.find (user => user.name == username && user.password == password)
+  }
+
+  def Authenticated[A](action: User => Action[A]): Action[A] = {
+    def unauthorized = Unauthorized.withHeaders("WWW-Authenticate" -> "Basic realm=\"UW IARPA Realm\"")
+    def getUser(request: RequestHeader): Option[User] = {
+      def decodeBasicAuth(auth: String) = {
+        val baStr = auth.replaceFirst("Basic ", "")
+        val Array(user, pass) = new String(new sun.misc.BASE64Decoder().decodeBuffer(baStr), "UTF-8").split(":")
+        (user, pass)
+      }
+      request.headers.get("Authorization").flatMap { auth =>
+        val (name, password) = decodeBasicAuth(auth)
+        User.find(name, password)
+      }
+    }
+
+    // Wrap the original BodyParser with authentication
+    val authenticatedBodyParser = parse.using { request =>
+      getUser(request).map(u => action(u).parser).getOrElse {
+        parse.error(unauthorized)
+      }
+    }
+
+    // define the new Action
+    Action(authenticatedBodyParser) { request =>
+      getUser(request).map(u => action(u)(request)).getOrElse {
+        unauthorized
+      }
+    }
+  }
+
   def searchForm: Form[Query] = {
     import play.api.data.validation.Constraints._
     def unapply(query: Query): Option[(Option[String], Option[String], Option[String], Option[String], String)] = {
@@ -28,27 +69,28 @@ object Application extends Controller {
         "rel" -> optional(text),
         "arg2" -> optional(text),
         "extractor" -> optional(text),
-        "groupBy" -> text)(apply)(unapply)) verifying("All search fields cannot be empty", { query =>
+        "groupBy" -> text)(apply)(unapply)) verifying ("All search fields cannot be empty", { query =>
           query.arg1.used || query.rel.used || query.arg2.used
         }))
   }
 
-  def index = Action {
+  def index = Authenticated { user => Action {
     Ok(views.html.search(searchForm.fill(Query(None, None, None))))
-  }
+  }}
 
   def submit = Action { implicit request =>
     searchForm.bindFromRequest.fold(
-        errors => BadRequest(views.html.search(errors)),
-        query => searchResult(query))
+      errors => BadRequest(views.html.search(errors)),
+      query => searchResult(query))
   }
 
   def searchResult(query: Query) = {
     val instances = LuceneQueryExecutor.execute(query)
     val queryString = LuceneQueryExecutor.luceneQueryVariables(query).foldLeft(
-        LuceneQueryExecutor.luceneQueryString(query)){ case (query, (field, value)) =>
+      LuceneQueryExecutor.luceneQueryString(query)) {
+        case (query, (field, value)) =>
           query.replaceAll("%" + field + "%", "\"" + value + "\"")
-        }
+      }
     val groups = ExtractionGroup.from(query.groupBy, instances).toList.sortBy(-_.instances.size)
     Ok(views.html.search(searchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
   }
