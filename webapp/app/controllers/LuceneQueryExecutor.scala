@@ -4,27 +4,32 @@ import models.Query
 import play.api.Logger
 import models.ExtractionInstance
 import play.api.Play.current
+import play.api.Play
+import models.TypeHierarchy
+import java.util.concurrent.atomic.AtomicInteger
 
 object LuceneQueryExecutor {
   val solrUrl = current.configuration.getString("db.solr.url").get
+
   def luceneQueryString(q: Query): String = {
     val strings =
       q.usedStrings.map { p => p.string.zipWithIndex.map
         { case (string, i) => "+" + p.part.short + ":%" + p.part.short + "_" + i + "%" }.mkString(" ")
       }
+    val i = new AtomicInteger(0)
     val types =
-      q.usedTypes.map { p => p.typ.zipWithIndex.map
-        { case (typ, i) => "+" + p.part.short + "_types:%" + p.part.short + "_types_" + i + "%" }.mkString(" ")
-      }
+      q.usedTypes.flatMap { p => p.typ.map { typ =>
+        "+(" + Application.typeHierarchy.baseTypes(typ).map { case typ => p.part.short + "_types:%" + p.part.short + "_types_" + i.getAndIncrement() + "%" }.mkString(" OR ") + ")"
+      }}
     val extractor = q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" }
 
-    (strings ++ types + extractor).mkString(" ")
+    (strings ++ types :+ extractor).mkString(" ")
   }
 
   def luceneQueryVariables(q: Query): Map[String, String] =
     Map.empty ++
        q.usedStrings.flatMap(part => part.string.zipWithIndex.map { case (string, i) => (part.part.short + "_" + i) -> part.part(q).string(i) }) ++
-       q.usedTypes.flatMap(part => part.typ.zipWithIndex.map { case (typ, i) => (part.part.short + "_types_" + i) -> part.part(q).typ(i) }) ++
+       q.usedTypes.flatMap(part => part.typ.flatMap(Application.typeHierarchy.baseTypes).zipWithIndex.map { case (typ, i) => (part.part.short + "_types_" + i) -> typ }) ++
        q.extractor.map("extractor" -> _)
 
   def execute(q: Query) = {
@@ -39,7 +44,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene query: " + queryString)
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "sentence", "extractor")
+      .fields("arg1", "rel", "arg2", "sentence", "url", "extractor")
       .sortBy(q.groupBy.short, Order.asc)
       .rows(10000)
       .getResultAs[ExtractionInstance](luceneQueryVariables(q))
@@ -59,7 +64,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene query: " + queryString)
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "sentence", "extractor")
+      .fields("arg1", "rel", "arg2", "sentence", "url", "extractor")
       .rows(10000)
       .getResultAs[ExtractionInstance](Map("arg1" -> arg1, "rel" -> rel, "arg2" -> arg2))
 

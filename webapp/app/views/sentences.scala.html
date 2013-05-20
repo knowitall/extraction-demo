@@ -6,8 +6,8 @@
   <h2>(@extrs.head.arg1, @extrs.head.rel, @extrs.head.arg2)</h2>
 
   <ol>
-  @extrs.groupBy(_.sentence).map { case (sentence, extrs) =>
-    <li>@sentence</li>
+  @extrs.groupBy(extr => (extr.url, extr.sentence)).map { case ((url, sentence), extrs) =>
+    <li>@url.drop(url.lastIndexOf('/') + 1): @sentence</li>
     <ul>
     @extrs.sortBy(_.extractor).map { extr =>
       <li>@extr.extractor</li>

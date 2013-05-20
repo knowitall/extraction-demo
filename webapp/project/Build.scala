@@ -8,6 +8,7 @@ object ApplicationBuild extends Build {
 
     val appDependencies = Seq(
       // Add your project dependencies here,
+      "edu.washington.cs.knowitall.common-scala" %% "common-scala" % "1.1.1",
 
       "jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7"
     )

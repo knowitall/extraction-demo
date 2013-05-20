@@ -8,14 +8,14 @@ case class Query(
     arg2: PartQuery,
     extractor: Option[String],
     groupBy: ExtractionPart) {
-  def used: Set[PartQuery] = {
-    var set = Set.empty[PartQuery]
+  def used: Seq[PartQuery] = {
+    var seq = Seq.empty[PartQuery]
 
-    if (arg1.used) set += arg1
-    if (rel.used) set += rel
-    if (arg2.used) set += arg2
+    if (arg1.used) seq :+= arg1
+    if (rel.used) seq :+= rel
+    if (arg2.used) seq :+= arg2
 
-    set
+    seq
   }
 
   def usedStrings = used.filter(!_.string.isEmpty)

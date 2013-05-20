@@ -1,5 +1,6 @@
 package controllers
 
+import play.api.Play.current
 import play.api._
 import play.api.mvc._
 import models.Query
@@ -11,8 +12,19 @@ import models.ResultSet
 import models.ExtractionGroup
 import models.Argument1
 import models.ExtractionPart
+import models.TypeHierarchy
 
 object Application extends Controller {
+  val typeHierarchy = {
+    val typeHierarchyUrl = {
+      val urlPath = "hierarchy"
+      val url = Play.classloader.getResource(urlPath)
+      require(url != null, "Could not find hierarchy: " + urlPath)
+      url
+    }
+    TypeHierarchy.fromUrl(typeHierarchyUrl)
+  }
+
   def decodeBasicAuth(auth: String) = {
     val baStr = auth.replaceFirst("Basic ", "")
     val Array(user, pass) = new String(new sun.misc.BASE64Decoder().decodeBuffer(baStr), "UTF-8").split(":")
@@ -78,11 +90,11 @@ object Application extends Controller {
     Ok(views.html.search(searchForm.fill(Query(None, None, None))))
   }}
 
-  def submit = Action { implicit request =>
+  def submit = Authenticated { user => Action { implicit request =>
     searchForm.bindFromRequest.fold(
       errors => BadRequest(views.html.search(errors)),
       query => searchResult(query))
-  }
+  }}
 
   def searchResult(query: Query) = {
     val instances = LuceneQueryExecutor.execute(query)
