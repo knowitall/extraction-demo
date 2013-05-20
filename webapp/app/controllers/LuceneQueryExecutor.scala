@@ -3,8 +3,10 @@ package controllers
 import models.Query
 import play.api.Logger
 import models.ExtractionInstance
+import play.api.Play.current
 
 object LuceneQueryExecutor {
+  val solrUrl = current.configuration.getString("db.solr.url").get
   def luceneQueryString(q: Query): String = {
     val strings =
       q.usedStrings.map { p => p.string.zipWithIndex.map
@@ -30,7 +32,7 @@ object LuceneQueryExecutor {
 
     import jp.sf.amateras.solr.scala._
 
-    val client = new SolrClient("http://ahab.cs.washington.edu:8983/solr")
+    val client = new SolrClient(solrUrl)
 
     val queryString = luceneQueryString(q)
 
@@ -51,7 +53,7 @@ object LuceneQueryExecutor {
     Logger.info("sentenes for: " + List(arg1, rel, arg2))
     import jp.sf.amateras.solr.scala._
 
-    val client = new SolrClient("http://ahab.cs.washington.edu:8983/solr")
+    val client = new SolrClient(solrUrl)
 
     val queryString = "+arg1_exact:%arg1% +rel_exact:%rel% +arg2_exact:%arg2%"
     Logger.logger.debug("Lucene query: " + queryString)
