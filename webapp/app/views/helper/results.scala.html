@@ -10,20 +10,20 @@
 <div><b>Number of groups:</b> @results.groups.size</div>
 <div><b>Number of instances:</b> @results.instanceCount</div>
 </p>
-@for(result <- results.groups) {
-  <div class="group-title">
-  <h4><span id="group-title">@result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></h4>
-  <a class="open-close"></a>
-</div>
-
-<div id="resultgroups-container" class="resultgroup-list">
-  @for(instance <- result.instances) {
-  <div id="resultgroup-list">
-    <span id="arg1" class="result-arg1">@instance.arg1</span>
-    <span id="rel" class="result-relation">@instance.rel</span>
-    <span id="arg2" class="result-arg2">@instance.arg2</span>
-    <a id="source" target="_blank" href="@routes.Application.sentences(instance.arg1, instance.rel, instance.arg2)">(<span id="count">@instance.count</span>)</a>
+@for((result, i) <- results.groups.zipWithIndex) {
+  <div id="group-title-@i" class="group-title">
+    <h4><a href="#" onclick="javascript:$('#group-container-@i').toggle()"><span id="group-title">@result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
+    <a class="open-close"></a>
   </div>
-  }
-</div>
+
+  <div id="group-container-@i" class="resultgroup-list">
+    @for(instance <- result.instances) {
+    <div id="resultgroup-list">
+      <span id="arg1" class="result-arg1">@instance.arg1</span>
+      <span id="rel" class="result-relation">@instance.rel</span>
+      <span id="arg2" class="result-arg2">@instance.arg2</span>
+      <a id="source" target="_blank" href="@routes.Application.sentences(instance.arg1, instance.rel, instance.arg2)">(<span id="count">@instance.count</span>)</a>
+    </div>
+    }
+  </div>
 }
