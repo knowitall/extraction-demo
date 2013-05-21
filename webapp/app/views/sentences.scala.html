@@ -10,7 +10,7 @@
     <li>@url.drop(url.lastIndexOf('/') + 1): @sentence</li>
     <ul>
     @extrs.sortBy(_.extractor).map { extr =>
-      <li>@extr.extractor</li>
+      <li>@extr.extractor (@("%1.2f" format extr.confidence))</li>
     }
     </ul>
   }
