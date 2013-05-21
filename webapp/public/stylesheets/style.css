@@ -101,6 +101,10 @@ span.result-predicate {
 span.result-arg1 {
     color:Black;
 }
+span.result-relation {
+    color:Black;
+    font-weight: bold;
+}
 span.result-arg2 {
     color:Black;
 }

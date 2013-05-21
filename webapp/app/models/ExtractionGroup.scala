@@ -8,7 +8,7 @@ object ExtractionGroup {
       list.head.copy(count = list.size)
     }
     deduped.groupBy(inst => part(inst) map (_.toLowerCase)).map { case (key, instances) =>
-      ExtractionGroup(key.mkString("; "), instances.toList.sortBy(-_.count))
+      ExtractionGroup(key.mkString("; "), instances.toList.sortBy(_.score(part)))
     }
   }
 }

@@ -12,11 +12,11 @@
 </p>
 @for((result, i) <- results.groups.zipWithIndex) {
   <div id="group-title-@i" class="group-title">
-    <h4><a href="#" onclick="javascript:$('#group-container-@i').toggle()"><span id="group-title">@result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
+    <h4><a href="#" onclick="javascript:$('#group-container-@i').toggle(); return false;"><span id="group-title">@result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
     <a class="open-close"></a>
   </div>
 
-  <div id="group-container-@i" class="resultgroup-list">
+  <div id="group-container-@i" class="resultgroup-list" @if(results.groups.take(i).iterator.map(_.instances.size).sum > 50) { style="display: none;" }>
     @for(instance <- result.instances) {
     <div id="resultgroup-list">
       <span id="arg1" class="result-arg1">@instance.arg1</span>

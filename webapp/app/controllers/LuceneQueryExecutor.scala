@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 object LuceneQueryExecutor {
   val solrUrl = current.configuration.getString("db.solr.url").get
+  Logger.info("SOLR Url: " + solrUrl)
 
   def luceneQueryString(q: Query): String = {
     val strings =
@@ -44,7 +45,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene query: " + queryString)
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "sentence", "url", "extractor")
+      .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
       .sortBy(q.groupBy.short, Order.asc)
       .rows(10000)
       .getResultAs[ExtractionInstance](luceneQueryVariables(q))
@@ -64,7 +65,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene query: " + queryString)
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "sentence", "url", "extractor")
+      .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor")
       .rows(10000)
       .getResultAs[ExtractionInstance](Map("arg1" -> arg1, "rel" -> rel, "arg2" -> arg2))
 
