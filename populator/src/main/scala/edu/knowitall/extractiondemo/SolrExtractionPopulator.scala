@@ -78,6 +78,10 @@ object SolrExtractionPopulator {
             <field name="rel">{ extr.rel }</field>
             <field name="arg2">{ extr.arg2 }</field>
 
+            <field name="arg1_postag">{ extr.sentence.tokens(extr.arg1Interval) }</field>
+            <field name="rel_postag">{ extr.sentence.tokens(extr.relInterval) }</field>
+            <field name="arg2_postag">{ extr.sentence.tokens(extr.arg2Interval) }</field>
+
             { extr.arg1Types(sentenceEntity.types).map { typ =>
               <field name="arg1_types">{ typ.descriptor }</field>
             }}

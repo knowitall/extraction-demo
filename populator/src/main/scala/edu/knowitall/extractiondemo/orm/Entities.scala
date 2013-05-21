@@ -25,6 +25,8 @@ class SentenceEntity {
   var text: String = _
   var tokens: Seq[TokenEntity] = _
   var types: Set[TypeEntity] = _
+
+  def tokens(interval: Interval): Seq[TokenEntity] = tokens.drop(interval.start).take(interval.size)
 }
 
 class TypeEntity {
