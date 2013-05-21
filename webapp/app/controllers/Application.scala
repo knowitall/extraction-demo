@@ -13,6 +13,7 @@ import models.ExtractionGroup
 import models.Argument1
 import models.ExtractionPart
 import models.TypeHierarchy
+import models.AdvancedQuery
 
 object Application extends Controller {
   val typeHierarchy = {
@@ -86,13 +87,30 @@ object Application extends Controller {
         }))
   }
 
+  def advancedSearchForm: Form[AdvancedQuery] = {
+    def unapply(query: AdvancedQuery): Option[(String, String)] = {
+      Some(query.queryString, query.groupBy.short)
+    }
+    def apply(queryString: String, groupBy: String) = {
+      AdvancedQuery(queryString, ExtractionPart.parse(groupBy))
+    }
+    import play.api.data.validation.Constraints._
+    Form((mapping("query" -> text, "groupBy" -> text)(apply)(unapply)))
+  }
+
   def index = Authenticated { user => Action {
-    Ok(views.html.search(searchForm.fill(Query(None, None, None))))
+    Ok(views.html.search(searchForm.fill(Query(None, None, None)), advancedSearchForm))
   }}
 
   def submit = Authenticated { user => Action { implicit request =>
     searchForm.bindFromRequest.fold(
-      errors => BadRequest(views.html.search(errors)),
+      errors => BadRequest(views.html.search(errors, advancedSearchForm)),
+      query => searchResult(query))
+  }}
+
+  def submitAdvanced = Authenticated { user => Action { implicit request =>
+    advancedSearchForm.bindFromRequest.fold(
+      errors => BadRequest(views.html.search(searchForm, errors)),
       query => searchResult(query))
   }}
 
@@ -104,7 +122,14 @@ object Application extends Controller {
           query.replaceAll("%" + field + "%", "\"" + value + "\"")
       }
     val groups = ExtractionGroup.from(query.groupBy, instances).toList.sortBy(-_.instances.size)
-    Ok(views.html.search(searchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
+    Ok(views.html.search(searchForm.fill(query), advancedSearchForm, Some(ResultSet(groups)), Some(queryString)))
+  }
+
+  def searchResult(query: AdvancedQuery) = {
+    val queryString = query.queryString
+    val instances = LuceneQueryExecutor.execute(queryString)
+    val groups = ExtractionGroup.from(query.groupBy, instances).toList.sortBy(-_.instances.size)
+    Ok(views.html.search(searchForm, advancedSearchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
   }
 
   def search(arg1: Option[String], rel: Option[String], arg2: Option[String]) = Action {

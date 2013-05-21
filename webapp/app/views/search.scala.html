@@ -1,4 +1,4 @@
-@(form: Form[Query], results: Option[ResultSet] = None, queryString: Option[String] = None)
+@(form: Form[Query], advancedForm: Form[AdvancedQuery], results: Option[ResultSet] = None, queryString: Option[String] = None)
 
 @helper.main("Open Information Extractions") {
   <body>
@@ -19,7 +19,9 @@
   }
 
   <!-- search form -->
+  <div id="simple">
   @helper.form(action = routes.Application.submit, 'class -> "well form-search") {
+    <div class="offset8">simple <a href="#" onclick="$('div:#simple').hide(); $('div:#advanced').show();">advanced</a></div>
     <!--
     <div class="example-queries offset2">
       <h3>Example Queries:</h3>
@@ -67,12 +69,36 @@
         '_label -> "Grouping results by:"
       )
 
-      <div class="search">
+      <div align="center">
         <button class="btn">Search</button>
       </div>
     </div>
     </div>
   }
+  </div>
+  <div id="advanced" style="display: none">
+  @helper.form(action = routes.Application.submitAdvanced, 'class -> "well form-search") {
+    <div class="offset8"><a href="#" onclick="$('div:#advanced').hide(); $('div:#simple').show();">simple</a> advanced</div>
+    <div class="form-wrapper">
+      @helper.inputText(
+          form("query"),
+          '_class -> "dl-horizontal",
+          '_label -> "Advanced:",
+          'placeholder -> "solr query")
+
+      @helper.inputRadioGroup(
+        form("groupBy"),
+        options = ExtractionPart.parts.map(part => (part.short, part.name)),
+        '_class -> "dl-horizontal",
+        '_label -> "Grouping results by:"
+      )
+      </div>
+
+      <div align="center">
+        <button class="btn">Search</button>
+      </div>
+  }
+  </div>
 
   <!-- results container -->
   <div wicket:id="results-container" class="results-container">

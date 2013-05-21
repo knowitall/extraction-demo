@@ -2,6 +2,7 @@ package models
 
 import scala.util.matching.Regex
 
+case class AdvancedQuery(queryString: String, groupBy: ExtractionPart)
 case class Query(
     arg1: PartQuery,
     rel: PartQuery,

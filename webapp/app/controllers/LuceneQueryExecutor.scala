@@ -72,4 +72,23 @@ object LuceneQueryExecutor {
     Logger.info("sentence extractions received: " + list.size)
     list
   }
+
+  def execute(q: String) = {
+    Logger.info("query for: " + q)
+
+    import jp.sf.amateras.solr.scala._
+
+    val client = new SolrClient(solrUrl)
+
+    Logger.logger.debug("Lucene query: " + q)
+
+    val result = client.query(q)
+      .fields("arg1", "rel", "arg2", "sentence", "url", "extractor")
+      .rows(10000)
+      .getResultAs[ExtractionInstance]()
+
+    val list = result.documents.toList
+    Logger.info("results received: " + list.size)
+    list
+  }
 }
