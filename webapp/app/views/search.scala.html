@@ -89,6 +89,7 @@
       @helper.inputRadioGroup(
         form("groupBy"),
         options = ExtractionPart.parts.map(part => (part.short, part.name)),
+        'id -> "groupByAdvanced",
         '_class -> "dl-horizontal",
         '_label -> "Grouping results by:"
       )

@@ -86,6 +86,7 @@ object Application extends Controller {
           query.arg1.used || query.rel.used || query.arg2.used
         }))
   }
+  def defaultSearchForm = searchForm.fill(Query(None, None, None))
 
   def advancedSearchForm: Form[AdvancedQuery] = {
     def unapply(query: AdvancedQuery): Option[(String, String)] = {
@@ -99,7 +100,7 @@ object Application extends Controller {
   }
 
   def index = Authenticated { user => Action {
-    Ok(views.html.search(searchForm.fill(Query(None, None, None)), advancedSearchForm))
+    Ok(views.html.search(defaultSearchForm, advancedSearchForm))
   }}
 
   def submit = Authenticated { user => Action { implicit request =>
@@ -110,7 +111,7 @@ object Application extends Controller {
 
   def submitAdvanced = Authenticated { user => Action { implicit request =>
     advancedSearchForm.bindFromRequest.fold(
-      errors => BadRequest(views.html.search(searchForm, errors)),
+      errors => BadRequest(views.html.search(defaultSearchForm, errors)),
       query => searchResult(query))
   }}
 
@@ -129,7 +130,7 @@ object Application extends Controller {
     val queryString = query.queryString
     val instances = LuceneQueryExecutor.execute(queryString)
     val groups = ExtractionGroup.from(query.groupBy, instances).toList.sortBy(-_.instances.size)
-    Ok(views.html.search(searchForm, advancedSearchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
+    Ok(views.html.search(defaultSearchForm, advancedSearchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
   }
 
   def search(arg1: Option[String], rel: Option[String], arg2: Option[String]) = Action {
