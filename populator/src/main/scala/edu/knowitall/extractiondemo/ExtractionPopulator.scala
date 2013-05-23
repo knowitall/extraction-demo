@@ -153,6 +153,7 @@ object ExtractionPopulator {
       }
     }
 
+/*
     class R2A2EntityExtractor extends ChunkedEntityExtractor("R2A2") {
       val r2a2 = new R2A2()
       override def extract(sentence: Sentence, id: AtomicInteger) = {
@@ -164,6 +165,7 @@ object ExtractionPopulator {
         }
       }
     }
+*/
 
     class RelnounEntityExtractor extends ChunkedEntityExtractor("Relnoun") {
       val relnoun = new Relnoun()
@@ -172,7 +174,7 @@ object ExtractionPopulator {
           sentence <- sentence.chunked.toList
           inst <- relnoun.extract(sentence)
         } yield {
-          createEntity(id, 0.0, inst)
+          createEntity(id, 1.0, inst)
         }
       }
     }
@@ -184,7 +186,7 @@ object ExtractionPopulator {
           sentence <- sentence.chunked.toList
           inst <- nesty.extract(sentence)
         } yield {
-          createEntity(id, 0.0, inst)
+          createEntity(id, 0.5, inst)
         }
       }
     }
@@ -215,7 +217,7 @@ abstract class ExtractionPopulator(
 
   def this(taggers: TaggerCollection, skipFirstSentence: Boolean) = this(List(
     new ChunkedEntityExtractor.ReVerbEntityExtractor,
-    new ChunkedEntityExtractor.R2A2EntityExtractor,
+    //new ChunkedEntityExtractor.R2A2EntityExtractor,
     new ChunkedEntityExtractor.RelnounEntityExtractor,
     new ChunkedEntityExtractor.NestyEntityExtractor,
     new OpenParseEntityExtractor), taggers, skipFirstSentence)
