@@ -1,9 +1,27 @@
 @(extrs: Seq[ExtractionInstance])
 
+@tableRow(label: String, types: Seq[String]) = {
+    <tr>
+      <td>@label</td>
+      <td>@if(types.isEmpty) { (none) } else { @types.distinct.sorted.mkString(", ") }</td>
+    </tr>
+}
+
 @helper.main("Open Information Extraction") {
 
   <h1>Sentences</h1>
   <h2>(@extrs.head.arg1, @extrs.head.rel, @extrs.head.arg2)</h2>
+
+  <br />
+
+  <table class="table table-hover">
+    <tr><th colspan=2>Extraction Part Types</th></tr>
+  @tableRow("Argument1", extrs.flatMap{extr => Option(extr.arg1Types).getOrElse(Seq.empty)})
+  @tableRow("Relation", extrs.flatMap{extr => Option(extr.relTypes).getOrElse(Seq.empty)})
+  @tableRow("Argument2", extrs.flatMap{extr => Option(extr.arg2Types).getOrElse(Seq.empty)})
+  <tr>
+  </tr>
+  </table>
 
   <ol>
   @extrs.groupBy(extr => (extr.url, extr.sentence)).map { case ((url, sentence), extrs) =>

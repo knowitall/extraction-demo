@@ -65,7 +65,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene query: " + queryString)
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
+      .fields("arg1", "rel", "arg2", "arg1_types", "rel_types", "arg2_types", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
       .rows(10000)
       .getResultAs[ExtractionInstance](Map("arg1" -> arg1, "rel" -> rel, "arg2" -> arg2))
 
