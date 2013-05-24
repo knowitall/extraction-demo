@@ -63,7 +63,7 @@ object SolrExtractionPopulator {
 
     import dispatch._
 
-    def solrUrl = url(settings.solrUrl)
+    def solrUrl = url(settings.solrUrl).as_!("knowitall", "knowit!")
     val http = Http()
 
     val writer = settings.outputFile.map(new java.io.PrintWriter(_))
@@ -76,7 +76,9 @@ object SolrExtractionPopulator {
 
             <field name="arg1">{ extr.arg1 }</field>
             <field name="rel">{ extr.rel }</field>
-            <field name="arg2">{ extr.arg2 }</field>
+            { extr.arg2s.map { arg2 =>
+              <field name="arg2">{ extr.arg2 }</field>
+            }}
 
             <field name="arg1_postag">{ extr.sentence.tokens(extr.arg1Interval).map(_.postag).mkString(" ") }</field>
             <field name="rel_postag">{ extr.sentence.tokens(extr.relInterval).map(_.postag).mkString(" ") }</field>

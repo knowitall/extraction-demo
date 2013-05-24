@@ -28,9 +28,13 @@ import edu.washington.cs.knowitall.nlp.extraction.ChunkedBinaryExtraction
 import edu.knowitall.chunkedextractor.Nesty
 import edu.knowitall.chunkedextractor.R2A2
 import edu.knowitall.ollie.Ollie
+import edu.knowitall.srl.SrlExtractor
+import edu.knowitall.srl.SrlExtractionInstance
+import edu.knowitall.srl.confidence.SrlConfidenceFunction
 import edu.knowitall.ollie.confidence.OllieConfidenceFunction
 import edu.knowitall.ollie.confidence.OllieConfidenceFunction
 import edu.knowitall.taggers.tag.TaggerCollection
+import edu.knowitall.tool.conf.impl.LogisticRegression
 
 object ExtractionPopulator {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -90,7 +94,38 @@ object ExtractionPopulator {
   }
   */
 
-  class OpenParseEntityExtractor(ollie: Ollie, confFunc: OllieConfidenceFunction.OllieIndependentConfFunction) extends EntityExtractor("Ollie") {
+  class SrlEntityExtractor(extractor: SrlExtractor, confFunc: LogisticRegression[SrlExtractionInstance])
+  extends EntityExtractor("Srl") {
+    def this() = this(new SrlExtractor(), SrlConfidenceFunction.loadDefaultClassifier())
+    override def extract(line: Sentence, id: AtomicInteger): List[ExtractionEntity] = {
+      for {
+        graph <- line.graph.toList;
+        inst <- extractor.apply(graph);
+
+        extr = inst.extr
+        conf = confFunc.getConf(inst)
+      } yield {
+        val entity = new ExtractionEntity()
+        entity.id = id.getAndIncrement
+
+        entity.rel = extr.rel.text
+        entity.arg1 = extr.arg1.text
+        entity.arg2s = extr.arg2s.map(_.text)
+
+        entity.relInterval = extr.rel.span
+        entity.arg1Interval = extr.arg1.interval
+        entity.arg2Intervals = extr.arg2s.map(_.interval)
+
+        entity.extractor = this.name
+        entity.confidence = conf
+
+        entity
+      }
+    }
+  }
+
+  class OpenParseEntityExtractor(ollie: Ollie, confFunc: OllieConfidenceFunction.OllieIndependentConfFunction)
+  extends EntityExtractor("Ollie") {
     def this() = this(new Ollie(), OllieConfidenceFunction.loadDefaultClassifier())
     override def extract(line: Sentence, id: AtomicInteger): List[ExtractionEntity] = {
       for {
@@ -220,7 +255,7 @@ abstract class ExtractionPopulator(
     //new ChunkedEntityExtractor.R2A2EntityExtractor,
     new ChunkedEntityExtractor.RelnounEntityExtractor,
     new ChunkedEntityExtractor.NestyEntityExtractor,
-    new OpenParseEntityExtractor), taggers, skipFirstSentence)
+    new SrlEntityExtractor), taggers, skipFirstSentence)
 
   val chunkerModel = OpenNlpChunker.loadDefaultModel
   val postagModel = OpenNlpPostagger.loadDefaultModel

@@ -54,11 +54,21 @@ class ExtractionEntity {
 
   var rel: String = _
   var arg1: String = _
-  var arg2: String = _
+  var arg2s: Seq[String] = _
+
+  def arg2: String = arg2s.head
+  def arg2_=(value: String): Unit = {
+    arg2s = Seq(value)
+  }
 
   var arg1Interval: Interval = _
   var relInterval: Interval = _
-  var arg2Interval: Interval = _
+  var arg2Intervals: Seq[Interval] = _
+
+  def arg2Interval: Interval = arg2Intervals.head
+  def arg2Interval_=(value: Interval): Unit = {
+    arg2Intervals = Seq(value)
+  }
 
   def intervals = Iterable(arg1Interval, relInterval, arg2Interval)
   def containedTypes(types: Iterable[TypeEntity]) = {

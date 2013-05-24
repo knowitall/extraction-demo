@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import edu.knowitall.common.Resource.using
 import edu.knowitall.tool.parse.DependencyParser
 import edu.knowitall.tool.parse.MaltParser
+import edu.knowitall.tool.parse.ClearParser
 import scopt.OptionParser
 
 object SriSentencesProcessor {
@@ -31,15 +32,15 @@ object SriSentencesProcessor {
       var inputDirectory: File = _
       var outputDirectory: File = _
       var recursive: Boolean = false
-      var parser: String = "malt"
+      var parser: String = _
       var parallel: Boolean = false
     }
 
     val parser = new OptionParser("applypat") {
       arg("input", "sentences input directory", { path: String => settings.inputDirectory = new File(path) })
       arg("output", "sentences output directory", { path: String => settings.outputDirectory = new File(path) })
+      arg("parser", "stanford/malt/clear", { parser: String => settings.parser = parser })
       opt("r", "recursive", "recursively descent into subdirectories", { settings.recursive = true })
-      opt("p", "parser", "stanford or malt", { parser: String => settings.parser = parser })
       opt("parallel", "stanford or malt", { settings.parallel = true })
     }
 
@@ -51,7 +52,7 @@ object SriSentencesProcessor {
   def run(settings: Settings) = {
     import scala.collection.JavaConversions._
     logger.info("Listing files...")
-    val files: Iterable[File] = FileUtils.listFiles(settings.inputDirectory, Array("txt"), settings.recursive).asScala
+    val files: Iterable[File] = FileUtils.listFiles(settings.inputDirectory, Array("sentences", "txt"), settings.recursive).asScala
     logger.info("File count: " + files.size)
 
     val tagRegex = "<[^>]*>".r
@@ -59,15 +60,13 @@ object SriSentencesProcessor {
     val matchingRegex = """(?:\(.*?\))|(?:\[.*?\])""".r
     logger.info("Initializing parser...")
 
-    val threadLocalParser = new ThreadLocal[DependencyParser]() {
-      override def initialValue: DependencyParser = {
-        settings.parser match {
-          //case "stanford" => new StanfordParser
-          case "malt" => new MaltParser
-          case s => throw new IllegalArgumentException("Unknown parser: " + s)
-        }
+    val parser =
+      settings.parser match {
+        //case "stanford" => new StanfordParser
+        case "malt" => new MaltParser
+        case "clear" => new ClearParser
+        case s => throw new IllegalArgumentException("Unknown parser: " + s)
       }
-    }
 
     val i = new AtomicInteger
     val iter = if (settings.parallel) files.par else files
@@ -91,14 +90,14 @@ object SriSentencesProcessor {
       }
 
       val output = new File(settings.outputDirectory, file.getName)
-      using(Source.fromFile(file)) { source =>
+      using(Source.fromFile(file, "UTF8")) { source =>
         using(new PrintWriter(output, "UTF8")) { writer =>
           for (line <- source.getLines; if valid(line)) {
             try {
               val cleaned = clean(line)
               val stripped = matchingRegex.replaceAllIn(tabRegex.replaceAllIn(tagRegex.replaceAllIn(cleaned, ""), " "), "")
               val parsed =
-                if (stripped.length < 500) Some(threadLocalParser.get.dependencyGraph(stripped))
+                if (stripped.length < 500) Some(parser.dependencyGraph(stripped))
                 else None
 
               writer.println(stripped + "\t" + parsed.getOrElse(""))
