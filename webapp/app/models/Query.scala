@@ -64,5 +64,5 @@ object Query {
         extractor, groupBy)
   }
 
-  val extractors = List("ReVerb", "R2A2", "Relnoun")
+  val extractors = List("ReVerb", "R2A2", "Relnoun", "SRL")
 }

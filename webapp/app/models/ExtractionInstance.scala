@@ -4,12 +4,16 @@ import java.util.ArrayList
 
 import scala.collection.JavaConverters._
 
-case class ExtractionInstance(arg1: String, rel: String, arg2: String, arg1_types: ArrayList[String], rel_types: ArrayList[String], arg2_types: ArrayList[String], arg1_postag: String, rel_postag: String, arg2_postag: String, sentence: String, url: String, extractor: String, confidence: Double, count: Int) {
+case class ExtractionInstance(arg1: String, rel: String, arg2: ArrayList[String], arg1_types: ArrayList[String], rel_types: ArrayList[String], arg2_types: ArrayList[String], arg1_postag: String, rel_postag: String, arg2_postag: String, sentence: String, url: String, extractor: String, confidence: Double, count: Int) {
   def arg1s = Seq(arg1)
   def rels = Seq(rel)
-  def arg2s = Seq(arg2)
+  val arg2Seq = Option(arg2).map(_.asScala.toSeq).getOrElse(Seq.empty)
 
-  def parts = Iterable(arg1, rel, arg2)
+  def arg1String = arg1
+  def relString = rel
+  def arg2String = arg2Seq.mkString("; ")
+
+  val parts = Iterable(arg1, rel) ++ arg2Seq
 
   def arg1Postag = arg1_postag
   def relPostag = rel_postag
@@ -21,9 +25,9 @@ case class ExtractionInstance(arg1: String, rel: String, arg2: String, arg1_type
 
   def text(groupBy: ExtractionPart) = {
     (groupBy match {
-      case Argument1 => Seq(this.rel, this.arg2)
-      case Relation => Seq(this.arg1, this.arg2)
-      case Argument2 => Seq(this.arg1, this.rel)
+      case Argument1 => Seq(this.relString, this.arg2String)
+      case Relation => Seq(this.arg1String, this.arg2String)
+      case Argument2 => Seq(this.arg1String, this.relString)
     }).mkString(" ")
   }
 

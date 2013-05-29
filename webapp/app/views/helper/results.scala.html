@@ -19,10 +19,10 @@
   <div id="group-container-@i" class="resultgroup-list" @if(results.groups.take(i).iterator.map(_.instances.size).sum > 50) { style="display: none;" }>
     @for(instance <- result.instances) {
     <div id="resultgroup-list">
-      <span id="arg1" class="result-arg1">@instance.arg1</span>
-      <span id="rel" class="result-relation">@instance.rel</span>
-      <span id="arg2" class="result-arg2">@instance.arg2</span>
-      <a id="source" target="_blank" href="@routes.Application.sentences(instance.arg1, instance.rel, instance.arg2)">(<span id="count">@instance.count</span>)</a>
+      <span id="arg1" class="result-arg1">@instance.arg1String</span>
+      <span id="rel" class="result-relation">@instance.relString</span>
+      <span id="arg2" class="result-arg2">@instance.arg2String</span>
+      <a id="source" target="_blank" href="@routes.Application.sentences(instance.arg1String, instance.relString, instance.arg2String)">(<span id="count">@instance.count</span>)</a>
     </div>
     }
   </div>

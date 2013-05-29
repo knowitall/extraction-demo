@@ -46,7 +46,6 @@ object LuceneQueryExecutor {
 
     val result = client.query(queryString)
       .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
-      .sortBy(q.groupBy.short, Order.asc)
       .rows(10000)
       .getResultAs[ExtractionInstance](luceneQueryVariables(q))
 
