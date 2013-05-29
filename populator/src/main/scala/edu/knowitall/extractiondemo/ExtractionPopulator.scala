@@ -104,6 +104,8 @@ object ExtractionPopulator {
 
         extr = inst.extr
         conf = confFunc.getConf(inst)
+
+        if !extr.arg2s.isEmpty
       } yield {
         val entity = new ExtractionEntity()
         entity.id = id.getAndIncrement
@@ -364,7 +366,7 @@ abstract class ExtractionPopulator(
 
     print("  * Finding extractions in the lines... ")
     Timing.timeThen {
-      lines.par.map(extractLine)
+      lines.map(extractLine)
     } { ns => println(Timing.Seconds.format(ns)) }
   }
 

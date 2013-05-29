@@ -77,7 +77,7 @@ object SolrExtractionPopulator {
             <field name="arg1">{ extr.arg1 }</field>
             <field name="rel">{ extr.rel }</field>
             { extr.arg2s.map { arg2 =>
-              <field name="arg2">{ extr.arg2 }</field>
+              <field name="arg2">{ arg2 }</field>
             }}
 
             <field name="arg1_postag">{ extr.sentence.tokens(extr.arg1Interval).map(_.postag).mkString(" ") }</field>
