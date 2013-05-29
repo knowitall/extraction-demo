@@ -1,6 +1,7 @@
 package models
 
 sealed abstract class ExtractionPart(val name: String, val short: String) {
+  def postags(instance: ExtractionInstance): String
   def apply(instance: ExtractionInstance): Seq[String]
   def apply(query: Query): PartQuery
 }

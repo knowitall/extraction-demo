@@ -42,3 +42,10 @@ case class ExtractionInstance(arg1: String, rel: String, arg2: String, arg1_type
     (-properScore, -this.confidence)
   }
 }
+
+object ExtractionInstance {
+  class ExtractionInstanceOrdering(groupBy: ExtractionPart) extends Ordering[ExtractionInstance] {
+    def compare(a: ExtractionInstance, b: ExtractionInstance) =
+      implicitly[Ordering[(Int, Double)]].compare(a.score(groupBy), b.score(groupBy))
+  }
+}
