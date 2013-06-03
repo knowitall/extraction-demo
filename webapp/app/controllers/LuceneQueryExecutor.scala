@@ -41,20 +41,24 @@ object LuceneQueryExecutor {
     val client = new SolrClient(solrUrl)
 
     val queryString = luceneQueryString(q)
+    val queryVariables = luceneQueryVariables(q)
 
     Logger.logger.debug("Lucene query: " + queryString)
+    Logger.logger.debug("Lucene variables: " + queryVariables)
 
     val result = client.query(queryString)
       .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
       .rows(10000)
-      .getResultAs[ExtractionInstance](luceneQueryVariables(q))
+      .getResultAs[ExtractionInstance](queryVariables)
 
     val list = result.documents.toList
     Logger.info("results received: " + list.size)
     list
   }
 
-  def executeExact(arg1: String, rel: String, arg2: String) = {
+  def executeExact(arg1: String, rel: String, arg2s: Seq[String]) = {
+    val arg2 = arg2s.head
+
     Logger.info("sentenes for: " + List(arg1, rel, arg2))
     import jp.sf.amateras.solr.scala._
 
@@ -62,6 +66,7 @@ object LuceneQueryExecutor {
 
     val queryString = "+arg1_exact:%arg1% +rel_exact:%rel% +arg2_exact:%arg2%"
     Logger.logger.debug("Lucene query: " + queryString)
+    Logger.logger.debug("Lucene variables: " + (List("arg1", "rel", "arg2") zip List(arg1, rel, arg2)))
 
     val result = client.query(queryString)
       .fields("arg1", "rel", "arg2", "arg1_types", "rel_types", "arg2_types", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
