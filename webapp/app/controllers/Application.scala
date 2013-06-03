@@ -122,7 +122,7 @@ object Application extends Controller {
         case (query, (field, value)) =>
           query.replaceAll("%" + field + "%", "\"" + value + "\"")
       }
-    val groups = ExtractionGroup.from(query.groupBy, instances).toList.sorted
+    val groups = ExtractionGroup.from(query.groupBy, instances)
     Ok(views.html.search(searchForm.fill(query), advancedSearchForm, Some(ResultSet(groups)), Some(queryString)))
   }
 

@@ -6,10 +6,13 @@ case class ExtractionGroup(title: String, properScore: Double, instances: List[E
 
 object ExtractionGroup {
   def from(part: ExtractionPart, instances: List[ExtractionInstance]) = {
+    // deduplicate and count instances
     val deduped = instances.groupBy(inst => (inst.arg1, inst.rel, inst.arg2)).map { case(tuple, list) =>
       list.head.copy(count = list.size)
     }
-    deduped.groupBy(inst => part(inst) map (_.toLowerCase)).map { case (key, instances) =>
+    
+    // group instances by the grouping part
+    deduped.groupBy(inst => part(inst) map (_.toLowerCase.replaceAll("\\s+", " "))).map { case (key, instances) =>
       val postags = part.postags(instances.head).split(" ")
 
         val properScore =
@@ -18,7 +21,7 @@ object ExtractionGroup {
           else 0
 
       ExtractionGroup(key.mkString("; "), properScore, instances.toList.sortBy(_.score(part)))
-    }
+    }.toList.sorted(ExtractionGroupOrdering)
   }
 
   implicit object ExtractionGroupOrdering extends Ordering[ExtractionGroup] {
