@@ -28,9 +28,9 @@ import edu.washington.cs.knowitall.nlp.extraction.ChunkedBinaryExtraction
 import edu.knowitall.chunkedextractor.Nesty
 import edu.knowitall.chunkedextractor.R2A2
 import edu.knowitall.ollie.Ollie
-import edu.knowitall.srl.SrlExtractor
-import edu.knowitall.srl.SrlExtractionInstance
-import edu.knowitall.srl.confidence.SrlConfidenceFunction
+import edu.knowitall.srlie.SrlExtractor
+import edu.knowitall.srlie.SrlExtractionInstance
+import edu.knowitall.srlie.confidence.SrlConfidenceFunction
 import edu.knowitall.ollie.confidence.OllieConfidenceFunction
 import edu.knowitall.ollie.confidence.OllieConfidenceFunction
 import edu.knowitall.taggers.tag.TaggerCollection

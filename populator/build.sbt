@@ -6,10 +6,12 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 
 resolvers += "Internal Maven" at "http://knowitall.cs.washington.edu/maven2"
 
+scalaVersion := "2.10.1"
+
 libraryDependencies ++= Seq(
       "edu.washington.cs.knowitall.ollie" %% "ollie-core" % "1.0.4-SNAPSHOT",
       "edu.washington.cs.knowitall.chunkedextractor" %% "chunkedextractor" % "1.0.4",
-      "edu.washington.cs.knowitall.openiesrl" %% "openie-srl" % "1.0.0-RC1",
+      "edu.washington.cs.knowitall.srlie" %% "openie-srl" % "1.0.0-RC1",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-parse-malt" % "2.4.2",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-parse-clear" % "2.4.2",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-chunk-opennlp" % "2.4.2",
