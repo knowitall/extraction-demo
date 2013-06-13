@@ -42,6 +42,7 @@ class DocumentEntity {
   var id: Long = _
   var name: String = _
   var path: String = _
+  var corpus: String = _
 }
 
 class ExtractionEntity {

@@ -107,6 +107,7 @@ object ExtractionPopulator {
 
         if !extr.arg2s.isEmpty
       } yield {
+        println(extr)
         val entity = new ExtractionEntity()
         entity.id = id.getAndIncrement
 
@@ -373,12 +374,13 @@ abstract class ExtractionPopulator(
   def persist(entity: SentenceEntity)
   def persist(entity: DocumentEntity)
 
-  def extractAndPersist(file: File) {
+  def extractAndPersist(file: File, corpus: String) {
     // create document
     val entity = new DocumentEntity()
     entity.id = documentId.getAndIncrement
     entity.name = file.getName
     entity.path = file.getAbsolutePath
+    entity.corpus = corpus
     persist(entity)
 
     val extractions = extractFile(file)

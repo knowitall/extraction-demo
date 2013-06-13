@@ -103,6 +103,7 @@ object SolrExtractionPopulator {
 
             <field name="extractor">{ extr.extractor }</field>
             <field name="url">{ sentenceEntity.document.path }</field>
+            <field name="corpus">{ sentenceEntity.document.corpus }</field>
           </doc>
         }
         val xml = <add>{docs}</add>

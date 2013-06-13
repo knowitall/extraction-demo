@@ -89,7 +89,11 @@ object SriSentencesProcessor {
         }
       }
 
-      val output = new File(settings.outputDirectory, file.getName)
+      val subdirectory = file.getParentFile.getPath.drop(settings.inputDirectory.getPath.size)
+      val outputDir = new File(settings.outputDirectory, subdirectory)
+      outputDir.mkdirs()
+
+      val output = new File(outputDir, file.getName)
       using(Source.fromFile(file, "UTF8")) { source =>
         using(new PrintWriter(output, "UTF8")) { writer =>
           for (line <- source.getLines; if valid(line)) {
