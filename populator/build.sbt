@@ -13,11 +13,12 @@ fork := true
 javaOptions += "-Xmx6G"
 
 libraryDependencies ++= Seq(
+      "com.googlecode.clearnlp" % "clearnlp-threadsafe" % "1.3.0-a",
       "edu.washington.cs.knowitall.ollie" %% "ollie-core" % "1.0.4-SNAPSHOT",
       "edu.washington.cs.knowitall.chunkedextractor" %% "chunkedextractor" % "1.0.4",
       "edu.washington.cs.knowitall.srlie" %% "openie-srl" % "1.0.0-RC1",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-parse-malt" % "2.4.2",
-      "edu.washington.cs.knowitall.nlptools" %% "nlptools-parse-clear" % "2.4.2",
+      "edu.washington.cs.knowitall.nlptools" %% "nlptools-parse-clear" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-chunk-opennlp" % "2.4.2",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-sentence-opennlp" % "2.4.2",
       "edu.washington.cs.knowitall.nlptools" %% "nlptools-typer-stanford" % "2.4.2",
