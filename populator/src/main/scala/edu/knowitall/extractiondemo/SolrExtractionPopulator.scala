@@ -26,6 +26,7 @@ object SolrExtractionPopulator {
 
     def solrUrl: String // "jdbc:mysql://localhost/kdd?rewriteBatchedStatements=true";
 
+    // to be used instead of solrUrl
     def outputFile: Option[File]
   }
 
@@ -109,11 +110,14 @@ object SolrExtractionPopulator {
 
         val headers = Map("Content-type" -> "application/xml")
         val req = solrUrl / "update" << xmlString <:< headers
-        writer foreach (_.println(xmlString))
-        http(req OK as.String).either() match {
-          case Right(content) =>
-          case Left(StatusCode(404)) => System.err.println("404 not found: " + settings.solrUrl)
-          case Left(code) => System.err.println("error code: " + code.toString)
+        writer match {
+          case Some(writer) => writer.println(xmlString)
+          case None =>
+            http(req OK as.String).either() match {
+              case Right(content) =>
+              case Left(StatusCode(404)) => System.err.println("404 not found: " + settings.solrUrl)
+              case Left(code) => System.err.println("error code: " + code.toString)
+            }
         }
       }
     }
