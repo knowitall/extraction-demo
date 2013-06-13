@@ -8,6 +8,7 @@ case class Query(
     rel: PartQuery,
     arg2: PartQuery,
     extractor: Option[String],
+    corpus: Option[String],
     groupBy: ExtractionPart) {
   def used: Seq[PartQuery] = {
     var seq = Seq.empty[PartQuery]
@@ -54,6 +55,7 @@ object Query {
       rel: Option[String],
       arg2: Option[String],
       extractor: Option[String] = None,
+      corpus: Option[String] = None,
       groupBy: ExtractionPart = Argument1) = {
 
     val arg1Part = arg1.map(PartQuery.fromEntry(_, Argument1)).getOrElse(PartQuery.empty)
@@ -61,8 +63,9 @@ object Query {
     val arg2Part = arg2.map(PartQuery.fromEntry(_, Argument2)).getOrElse(PartQuery.empty)
 
     new Query(arg1Part, relPart, arg2Part,
-        extractor, groupBy)
+        extractor, corpus, groupBy)
   }
 
   val extractors = List("ReVerb", "R2A2", "Relnoun", "SRL")
+  val corpora = List("CBP", "DEA", "Gigaword", "ICE", "SDN", "TOSIG")
 }

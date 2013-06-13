@@ -62,6 +62,12 @@
         '_class -> "dl-horizontal",
         '_label -> "Extractor:")
 
+      @helper.select(
+        form("corpus"), 
+        options=("" -> "All") +: (Query.corpora zip Query.corpora),
+        '_class -> "dl-horizontal",
+        '_label -> "Corpus:")
+
       @helper.inputRadioGroup(
         form("groupBy"),
         options = ExtractionPart.parts.map(part => (part.short, part.name)),

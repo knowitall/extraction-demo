@@ -23,15 +23,17 @@ object LuceneQueryExecutor {
         "+(" + Application.typeHierarchy.baseTypes(typ).map { case typ => p.part.short + "_types:%" + p.part.short + "_types_" + i.getAndIncrement() + "%" }.mkString(" OR ") + ")"
       }}
     val extractor = q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" }
+    val corpus = q.corpus match { case Some(ex) => " +corpus:%corpus%" case None => "" }
 
-    (strings ++ types :+ extractor).mkString(" ")
+    (strings ++ types :+ extractor :+ corpus).mkString(" ")
   }
 
   def luceneQueryVariables(q: Query): Map[String, String] =
     Map.empty ++
        q.usedStrings.flatMap(part => part.string.zipWithIndex.map { case (string, i) => (part.part.short + "_" + i) -> part.part(q).string(i) }) ++
        q.usedTypes.flatMap(part => part.typ.flatMap(Application.typeHierarchy.baseTypes).zipWithIndex.map { case (typ, i) => (part.part.short + "_types_" + i) -> typ }) ++
-       q.extractor.map("extractor" -> _)
+       q.extractor.map("extractor" -> _) ++
+       q.corpus.map("corpus" -> _)
 
   def execute(q: Query) = {
     Logger.info("query for: " + q)
@@ -47,7 +49,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene variables: " + queryVariables)
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
+      .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "corpus", "confidence")
       .rows(10000)
       .getResultAs[ExtractionInstance](queryVariables)
 

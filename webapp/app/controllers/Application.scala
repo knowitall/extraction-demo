@@ -69,11 +69,11 @@ object Application extends Controller {
 
   def searchForm: Form[Query] = {
     import play.api.data.validation.Constraints._
-    def unapply(query: Query): Option[(Option[String], Option[String], Option[String], Option[String], String)] = {
-      Some((query.arg1.entryString, query.rel.entryString, query.arg2.entryString, query.extractor, query.groupBy.short))
+    def unapply(query: Query): Option[(Option[String], Option[String], Option[String], Option[String], Option[String], String)] = {
+      Some((query.arg1.entryString, query.rel.entryString, query.arg2.entryString, query.extractor, query.corpus, query.groupBy.short))
     }
-    def apply(arg1: Option[String], rel: Option[String], arg2: Option[String], extractor: Option[String], groupBy: String) = {
-      Query(arg1, rel, arg2, extractor, ExtractionPart.parse(groupBy))
+    def apply(arg1: Option[String], rel: Option[String], arg2: Option[String], extractor: Option[String], corpus: Option[String], groupBy: String) = {
+      Query(arg1, rel, arg2, extractor, corpus, ExtractionPart.parse(groupBy))
     }
     Form(
       // Defines a mapping that will handle Contact values
@@ -82,6 +82,7 @@ object Application extends Controller {
         "rel" -> optional(text),
         "arg2" -> optional(text),
         "extractor" -> optional(text),
+        "corpus" -> optional(text),
         "groupBy" -> text)(apply)(unapply)) verifying ("All search fields cannot be empty", { query =>
           query.arg1.used || query.rel.used || query.arg2.used
         }))
