@@ -129,7 +129,13 @@ object SolrExtractionPopulator {
     for (file <- files) {
       try {
         println(file.getName)
-        extractor.extractAndPersist(file)
+        val corpus = try {
+          file.getPath.drop(settings.inputDirectory.getPath.size).takeWhile(_ != '/')
+        }
+        catch {
+          case e: Exception => "unknown"
+        }
+        extractor.extractAndPersist(file, corpus)
         println()
       } catch {
         case e: Throwable => e.printStackTrace()
