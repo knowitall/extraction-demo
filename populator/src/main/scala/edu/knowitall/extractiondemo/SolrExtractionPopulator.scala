@@ -131,7 +131,7 @@ object SolrExtractionPopulator {
       try {
         println(file.getName)
         val corpus = try {
-          file.getPath.drop(settings.inputDirectory.getPath.size).takeWhile(_ != '/')
+          file.getPath.drop(settings.inputDirectory.getPath.size).drop(1).takeWhile(_ != '/')
         }
         catch {
           case e: Exception => "unknown"
