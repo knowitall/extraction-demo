@@ -8,6 +8,10 @@ resolvers += "Internal Maven" at "http://knowitall.cs.washington.edu/maven2"
 
 scalaVersion := "2.10.1"
 
+fork := true
+
+javaOptions += "-Xmx6G"
+
 libraryDependencies ++= Seq(
       "edu.washington.cs.knowitall.ollie" %% "ollie-core" % "1.0.4-SNAPSHOT",
       "edu.washington.cs.knowitall.chunkedextractor" %% "chunkedextractor" % "1.0.4",
