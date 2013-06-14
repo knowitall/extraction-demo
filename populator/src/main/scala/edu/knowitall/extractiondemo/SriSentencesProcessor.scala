@@ -71,8 +71,6 @@ object SriSentencesProcessor {
     val i = new AtomicInteger
     val iter = if (settings.parallel) files.par else files
     for (file <- iter) {
-      logger.info("Processing " + file.getName + " (" + i.getAndIncrement + "/" + files.size + ")...")
-
       def clean(line: String) = {
         if ((line count (_==':')) >= 4) line.substring(1 + line lastIndexOf ":")
         else if (line contains ":") line.substring(1 + (line indexOf ":"))
@@ -94,19 +92,25 @@ object SriSentencesProcessor {
       outputDir.mkdirs()
 
       val output = new File(outputDir, file.getName)
-      using(Source.fromFile(file, "UTF8")) { source =>
-        using(new PrintWriter(output, "UTF8")) { writer =>
-          for (line <- source.getLines; if valid(line)) {
-            try {
-              val cleaned = clean(line)
-              val stripped = matchingRegex.replaceAllIn(tabRegex.replaceAllIn(tagRegex.replaceAllIn(cleaned, ""), " "), "")
-              val parsed =
-                if (stripped.length < 500) Some(parser.dependencyGraph(stripped))
-                else None
+      if (output.exists) {
+        logger.info("Skipping " + file.getName + " (already processed)")
+      }
+      else {
+        logger.info("Processing " + file.getName + " (" + i.getAndIncrement + "/" + files.size + ")...")
+        using(Source.fromFile(file, "UTF8")) { source =>
+          using(new PrintWriter(output, "UTF8")) { writer =>
+            for (line <- source.getLines; if valid(line)) {
+              try {
+                val cleaned = clean(line)
+                val stripped = matchingRegex.replaceAllIn(tabRegex.replaceAllIn(tagRegex.replaceAllIn(cleaned, ""), " "), "")
+                val parsed =
+                  if (stripped.length < 500) Some(parser.dependencyGraph(stripped))
+                  else None
 
-              writer.println(stripped + "\t" + parsed.getOrElse(""))
-            } catch {
-              case e: Throwable => logger.error("Error processing line: " + line, e)
+                writer.println(stripped + "\t" + parsed.getOrElse(""))
+              } catch {
+                case e: Throwable => logger.error("Error processing line: " + line, e)
+              }
             }
           }
         }
