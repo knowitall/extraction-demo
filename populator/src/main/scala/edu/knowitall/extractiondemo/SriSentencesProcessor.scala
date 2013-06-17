@@ -93,7 +93,7 @@ object SriSentencesProcessor {
 
       val output = new File(outputDir, file.getName)
       if (output.exists) {
-        logger.info("Skipping " + file.getName + " (already processed)")
+        logger.info("Skipping " + file.getName + " (" + i.getAndIncrement + "/" + files.size + ") (already processed)")
       }
       else {
         logger.info("Processing " + file.getName + " (" + i.getAndIncrement + "/" + files.size + ")...")
