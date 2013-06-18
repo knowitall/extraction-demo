@@ -107,7 +107,7 @@ object ExtractionPopulator {
 
         if !extr.arg2s.isEmpty
       } yield {
-        println(extr)
+        //println(extr)
         val entity = new ExtractionEntity()
         entity.id = id.getAndIncrement
 
