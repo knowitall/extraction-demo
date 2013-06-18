@@ -232,8 +232,15 @@ object ExtractionPopulator {
 
   case class Sentence (
     val chunked: Option[Seq[Lemmatized[ChunkedToken]]],
-    val graph: Option[DependencyGraph]
-  )
+    val graph: Option[DependencyGraph]) {
+    
+    def debugText: String = {
+      val chunkedText = chunked.map { seq => seq.map(_.string).mkString(" ") }
+      val dgraphText = graph.map { g => g.text }
+      
+      chunkedText.getOrElse(dgraphText.getOrElse("No text available."))
+    }
+  }
 
   case class Document (
     val id: Int,
@@ -297,12 +304,16 @@ abstract class ExtractionPopulator(
   }
 
   def extractSentence(line: Sentence) = {
-    for {
-      extractor <- extractors;
-      entity <-
+    
+    extractors.flatMap { extractor =>
+      try {
         extractor.extract(line, relationId)
-    } yield {
-      entity
+      } catch {
+        case e: Throwable => {
+          logger.warn("Error processing sentence: %s".format(line.debugText), e)
+          List.empty
+        }
+      }
     }
   }
 
