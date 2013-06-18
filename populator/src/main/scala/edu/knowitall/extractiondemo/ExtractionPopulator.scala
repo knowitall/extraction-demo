@@ -361,7 +361,7 @@ abstract class ExtractionPopulator(
     print("  * Reading lines into memory... ")
     val lines = Timing.timeThen {
       Resource.using(Source.fromFile(file, "UTF8")) { source =>
-        source.getLines.toList
+        source.getLines
       }
     } { ns => println(Timing.Seconds.format(ns)) }
 
