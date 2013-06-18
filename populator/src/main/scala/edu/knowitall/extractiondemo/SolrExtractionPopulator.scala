@@ -71,7 +71,7 @@ object SolrExtractionPopulator {
     val extractor = new ExtractionPopulator(taggers, true) {
       def persist(documentEntity: DocumentEntity) {}
       def persist(sentenceEntity: SentenceEntity) {
-        val docs = for (extr <- sentenceEntity.extractions) yield {
+        val docs = for (extr <- sentenceEntity.extractions; if (extr.arg2.length == 1)) yield {
           <doc>
             <field name="id">{ extr.id }</field>
 
@@ -103,7 +103,6 @@ object SolrExtractionPopulator {
 
             <field name="extractor">{ extr.extractor }</field>
             <field name="url">{ sentenceEntity.document.path }</field>
-            <field name="corpus">{ sentenceEntity.document.corpus }</field>
           </doc>
         }
         val xml = <add>{docs}</add>

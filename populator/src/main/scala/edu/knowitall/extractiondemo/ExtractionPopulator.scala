@@ -361,7 +361,7 @@ abstract class ExtractionPopulator(
     print("  * Reading lines into memory... ")
     val lines = Timing.timeThen {
       Resource.using(Source.fromFile(file, "UTF8")) { source =>
-        source.getLines
+        source.getLines.toList
       }
     } { ns => println(Timing.Seconds.format(ns)) }
 
@@ -370,7 +370,15 @@ abstract class ExtractionPopulator(
       lines.map(extractLine)
     } { ns => println(Timing.Seconds.format(ns)) }
   }
-
+  
+  def extractSource(source: Source) = {
+    print("  * Finding extractions in the file... ")
+    Timing.timeThen {
+      val lines = source.getLines
+      lines.map(extractLine)
+    } { ns => println(Timing.Seconds.format(ns)) }
+  }
+  
   def persist(entity: SentenceEntity)
   def persist(entity: DocumentEntity)
 
@@ -383,24 +391,26 @@ abstract class ExtractionPopulator(
     entity.corpus = corpus
     persist(entity)
 
-    val extractions = extractFile(file)
+    Resource.using(Source.fromFile(file, "UTF8")) { source =>
 
-    print("  * Persisting extractions")
-    var i = 0
-    Timing.timeThen {
-      for (sentenceEntity <- extractions) {
-        i = i + 1
-        if (i % 100 == 0) {
-          print(".")
+      val extractions = extractSource(source)
+
+      print("  * Persisting extractions")
+      var i = 0
+      Timing.timeThen {
+        for (sentenceEntity <- extractions) {
+          i = i + 1
+          if (i % 100 == 0) {
+            print(".")
+          }
+
+          sentenceEntity.document = entity
+          persist(sentenceEntity)
         }
-
-        sentenceEntity.document = entity
-        persist(sentenceEntity)
+      } { ns =>
+        println(" " + Timing.Seconds.format(ns))
       }
-    } { ns =>
-      println(" " + Timing.Seconds.format(ns))
+      println(i + " sentences persisted")
     }
-
-    println(i + " sentences persisted")
   }
 }
