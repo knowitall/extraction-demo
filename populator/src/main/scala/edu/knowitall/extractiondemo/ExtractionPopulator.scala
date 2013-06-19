@@ -36,6 +36,8 @@ import edu.knowitall.ollie.confidence.OllieConfidenceFunction
 import edu.knowitall.taggers.tag.TaggerCollection
 import edu.knowitall.tool.conf.impl.LogisticRegression
 
+object srlMutex { }
+
 object ExtractionPopulator {
   val logger = LoggerFactory.getLogger(this.getClass)
   val tagRegex = "<[^>]*>".r
@@ -93,21 +95,37 @@ object ExtractionPopulator {
     }
   }
   */
-
+  
+  
   class SrlEntityExtractor(extractor: SrlExtractor, confFunc: LogisticRegression[SrlExtractionInstance])
   extends EntityExtractor("Srl") {
+    
+    val errorCounter = new AtomicInteger(0)
     def this() = this(new SrlExtractor(), SrlConfidenceFunction.loadDefaultClassifier())
     override def extract(line: Sentence, id: AtomicInteger): List[ExtractionEntity] = {
-      for {
-        graph <- line.graph.toList;
-        inst <- extractor.apply(graph);
+      val graph = line.graph.getOrElse { return List.empty }
+      
+      var insts: Seq[SrlExtractionInstance] = null;
+      
+      insts = srlMutex.synchronized {
+        try {
+          extractor.apply(graph).flatMap(_.triplize(true)).filter(_.extr.arg2s.size == 1)
+        } catch {
+          case e: Throwable => {
+            System.err.println("SrlExtractor error(%d) on: %s".format(errorCounter.getAndIncrement(), line.debugText))
+            Seq.empty
+          }
+        }
+      }
 
+      for {
+        inst <- insts.toList
         extr = inst.extr
         conf = confFunc.getConf(inst)
 
         if !extr.arg2s.isEmpty
       } yield {
-        println(extr)
+
         val entity = new ExtractionEntity()
         entity.id = id.getAndIncrement
 
@@ -232,8 +250,15 @@ object ExtractionPopulator {
 
   case class Sentence (
     val chunked: Option[Seq[Lemmatized[ChunkedToken]]],
-    val graph: Option[DependencyGraph]
-  )
+    val graph: Option[DependencyGraph]) {
+    
+    def debugText: String = {
+      val chunkedText = chunked.map { seq => seq.map(_.string).mkString(" ") }
+      val dgraphText = graph.map { g => g.text }
+      
+      chunkedText.getOrElse(dgraphText.getOrElse("No text available."))
+    }
+  }
 
   case class Document (
     val id: Int,
@@ -254,10 +279,10 @@ abstract class ExtractionPopulator(
   import ExtractionPopulator._
 
   def this(taggers: TaggerCollection, skipFirstSentence: Boolean) = this(List(
-    new ChunkedEntityExtractor.ReVerbEntityExtractor,
+    //new ChunkedEntityExtractor.ReVerbEntityExtractor,
     //new ChunkedEntityExtractor.R2A2EntityExtractor,
     new ChunkedEntityExtractor.RelnounEntityExtractor,
-    new ChunkedEntityExtractor.NestyEntityExtractor,
+    //new ChunkedEntityExtractor.NestyEntityExtractor,
     new SrlEntityExtractor), taggers, skipFirstSentence)
 
   val chunkerModel = OpenNlpChunker.loadDefaultModel
@@ -370,6 +395,14 @@ abstract class ExtractionPopulator(
       lines.map(extractLine)
     } { ns => println(Timing.Seconds.format(ns)) }
   }
+  
+  def extractSource(source: Source) = {
+    source.getLines.grouped(1000).flatMap { bigBatch =>
+      bigBatch.grouped(10).toSeq.flatMap { smallBatch =>
+        smallBatch.map(extractLine)
+      }
+    }
+  }
 
   def persist(entity: SentenceEntity)
   def persist(entity: DocumentEntity)
@@ -383,24 +416,27 @@ abstract class ExtractionPopulator(
     entity.corpus = corpus
     persist(entity)
 
-    val extractions = extractFile(file)
+    Resource.using(Source.fromFile(file)) { source =>
 
-    print("  * Persisting extractions")
-    var i = 0
-    Timing.timeThen {
-      for (sentenceEntity <- extractions) {
-        i = i + 1
-        if (i % 100 == 0) {
-          print(".")
+      val extractions = extractSource(source)
+
+      print("  * Persisting extractions")
+      var i = 0
+      Timing.timeThen {
+        for (sentenceEntity <- extractions) {
+          i = i + 1
+          if (i % 100 == 0) {
+            print(".")
+          }
+
+          sentenceEntity.document = entity
+          persist(sentenceEntity)
         }
-
-        sentenceEntity.document = entity
-        persist(sentenceEntity)
+      } { ns =>
+        println(" " + Timing.Seconds.format(ns))
       }
-    } { ns =>
-      println(" " + Timing.Seconds.format(ns))
-    }
 
-    println(i + " sentences persisted")
+      println(i + " sentences persisted")
+    }
   }
 }
