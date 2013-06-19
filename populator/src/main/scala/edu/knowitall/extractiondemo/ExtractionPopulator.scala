@@ -403,7 +403,7 @@ abstract class ExtractionPopulator(
   def extractSource(source: Source) = {
 
     source.getLines.grouped(1000).flatMap { bigBatch =>
-      bigBatch.grouped(10).toSeq.flatMap { smallBatch =>
+      bigBatch.grouped(10).toSeq.par.flatMap { smallBatch =>
         smallBatch.map(extractLine)
       }
     }
