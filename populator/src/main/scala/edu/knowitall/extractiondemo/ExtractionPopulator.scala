@@ -102,20 +102,18 @@ object ExtractionPopulator {
     val errorCounter = new AtomicInteger(0)
     def this() = this(new SrlExtractor(), SrlConfidenceFunction.loadDefaultClassifier())
     override def extract(line: Sentence, id: AtomicInteger): List[ExtractionEntity] = {
+      
       val graph = line.graph.getOrElse { return List.empty }
-      
-      var insts: Seq[SrlExtractionInstance] = null;
-      
-      insts = this.synchronized {
+
+      var insts =
         try {
-          extractor.apply(graph)
+          extractor.synchronized { extractor.apply(graph) }
         } catch {
           case e: Throwable => {
             System.err.println("SrlExtractor error(%d) on: %s".format(errorCounter.getAndIncrement(), line.debugText))
             Seq.empty
           }
         }
-      }
 
       for {
         inst <- insts.toList
