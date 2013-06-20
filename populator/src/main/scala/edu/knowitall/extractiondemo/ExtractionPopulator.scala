@@ -278,10 +278,10 @@ abstract class ExtractionPopulator(
   import ExtractionPopulator._
 
   def this(taggers: TaggerCollection, skipFirstSentence: Boolean) = this(List(
-    //new ChunkedEntityExtractor.ReVerbEntityExtractor,
+    new ChunkedEntityExtractor.ReVerbEntityExtractor,
     //new ChunkedEntityExtractor.R2A2EntityExtractor,
     new ChunkedEntityExtractor.RelnounEntityExtractor,
-    //new ChunkedEntityExtractor.NestyEntityExtractor,
+    new ChunkedEntityExtractor.NestyEntityExtractor,
     new SrlEntityExtractor), taggers, skipFirstSentence)
 
   val chunkerModel = OpenNlpChunker.loadDefaultModel
