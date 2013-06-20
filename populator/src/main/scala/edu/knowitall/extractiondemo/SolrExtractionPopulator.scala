@@ -12,6 +12,10 @@ import edu.knowitall.extractiondemo.orm.DocumentEntity
 import edu.knowitall.extractiondemo.orm.SentenceEntity
 import scopt.OptionParser
 import edu.knowitall.taggers.tag.TaggerCollection
+import org.apache.solr.client.solrj.SolrServer
+import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer
+import org.apache.solr.common.SolrInputDocument
+import java.util.concurrent.atomic.AtomicInteger
 
 object SolrExtractionPopulator {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -64,61 +68,40 @@ object SolrExtractionPopulator {
 
     import dispatch._
 
-    def solrUrl = url(settings.solrUrl).as_!("knowitall", "knowit!")
-    val http = Http()
+    val batchSize = 1000
+    val batchesPerCommit = 10
+    
+    val solr = new ConcurrentUpdateSolrServer(settings.solrUrl, batchSize, 8)
 
     val writer = settings.outputFile.map(new java.io.PrintWriter(_))
     val extractor = new ExtractionPopulator(taggers, true) {
+      val numDocs = new AtomicInteger(0)
       def persist(documentEntity: DocumentEntity) {}
       def persist(sentenceEntity: SentenceEntity) {
-        val docs = for (extr <- sentenceEntity.extractions) yield {
-          <doc>
-            <field name="id">{ extr.id }</field>
-
-            <field name="arg1">{ extr.arg1 }</field>
-            <field name="rel">{ extr.rel }</field>
-            { extr.arg2s.map { arg2 =>
-              <field name="arg2">{ arg2 }</field>
-            }}
-
-            <field name="arg1_postag">{ extr.sentence.tokens(extr.arg1Interval).map(_.postag).mkString(" ") }</field>
-            <field name="rel_postag">{ extr.sentence.tokens(extr.relInterval).map(_.postag).mkString(" ") }</field>
-            <field name="arg2_postag">{ extr.sentence.tokens(extr.arg2Interval).map(_.postag).mkString(" ") }</field>
-
-            { extr.arg1Types(sentenceEntity.types).map { typ =>
-              <field name="arg1_types">{ typ.descriptor }</field>
-            }}
-            { extr.relTypes(sentenceEntity.types).map { typ =>
-              <field name="rel_types">{ typ.descriptor }</field>
-            }}
-            { extr.arg2Types(sentenceEntity.types).map { typ =>
-              <field name="arg2_types">{ typ.descriptor }</field>
-            }}
-
-            <field name="context"></field>
-
-            <field name="confidence">{ extr.confidence }</field>
-
-            <field name="sentence">{ sentenceEntity.text }</field>
-
-            <field name="extractor">{ extr.extractor }</field>
-            <field name="url">{ sentenceEntity.document.path }</field>
-            <field name="corpus">{ sentenceEntity.document.corpus }</field>
-          </doc>
-        }
-        val xml = <add>{docs}</add>
-        val xmlString = xml.toString
-
-        val headers = Map("Content-type" -> "application/xml")
-        val req = solrUrl / "update" << xmlString <:< headers
-        writer match {
-          case Some(writer) => writer.println(xmlString)
-          case None =>
-            http(req OK as.String).either() match {
-              case Right(content) =>
-              case Left(StatusCode(404)) => System.err.println("404 not found: " + settings.solrUrl)
-              case Left(code) => System.err.println("error code: " + code.toString)
-            }
+        for (extr <- sentenceEntity.extractions) {
+          val doc = new SolrInputDocument()
+          doc.addField("id", extr.id)
+          doc.addField("arg1", extr.arg1)
+          doc.addField("rel", extr.rel)
+          doc.addField("arg2", extr.arg2)
+          doc.addField("arg1_postag", extr.sentence.tokens(extr.arg1Interval).map(_.postag).mkString(" ") )
+          doc.addField("rel_postag", extr.sentence.tokens(extr.relInterval).map(_.postag).mkString(" ") )
+          doc.addField("arg2_postag", extr.sentence.tokens(extr.arg2Interval).map(_.postag).mkString(" ") )
+          extr.arg1Types(sentenceEntity.types).foreach { typ => doc.addField("arg1_types", typ) }
+          extr.relTypes(sentenceEntity.types).foreach { typ => doc.addField("rel_types", typ) }
+          extr.arg2Types(sentenceEntity.types).foreach { typ => doc.addField("arg2_types", typ) }
+          doc.addField("context", "")
+          doc.addField("confidence", extr.confidence)
+          doc.addField("sentence", sentenceEntity.text)
+          doc.addField("extractor", extr.extractor)
+          doc.addField("url", sentenceEntity.document.path)
+          doc.addField("corpus", sentenceEntity.document.corpus)
+          
+          solr.add(doc)
+          if (numDocs.incrementAndGet() % batchSize * batchesPerCommit == 0) {
+            solr.commit()
+            logger.info("%d docs indexed.".format(numDocs.get()))
+          }
         }
       }
     }
@@ -137,15 +120,12 @@ object SolrExtractionPopulator {
           case e: Exception => "unknown"
         }
         extractor.extractAndPersist(file, corpus)
+        solr.commit()
         println()
       } catch {
         case e: Throwable => e.printStackTrace()
       }
+      solr.shutdown()
     }
-
-    // commit the updates
-    println("Committing the changes...")
-    println(http((solrUrl / "update" <<? Map("commit" -> "true")) OK as.String).apply())
-    http.shutdown()
   }
 }

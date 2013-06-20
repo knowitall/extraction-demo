@@ -1,5 +1,7 @@
 name := "extraction-populator"
 
+organization := "edu.knowitall"
+
 version := "1.0.0-SNAPSHOT"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
@@ -29,5 +31,6 @@ libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-core" % "1.0.9",
       "com.github.scopt" %% "scopt" % "2.1.0",
       "net.databinder.dispatch" %% "dispatch-core" % "0.10.0",
-      "commons-io" % "commons-io" % "2.4"
-    )
+      "commons-io" % "commons-io" % "2.4",
+      "org.apache.solr" % "solr-solrj" % "4.3.0",
+      "commons-logging" % "commons-logging" % "1.1.3")
