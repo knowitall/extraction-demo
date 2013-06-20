@@ -102,10 +102,8 @@ object ExtractionPopulator {
     val errorCounter = new AtomicInteger(0)
     def this() = this(new SrlExtractor(), SrlConfidenceFunction.loadDefaultClassifier())
     override def extract(line: Sentence, id: AtomicInteger): List[ExtractionEntity] = {
-      
-      val graph = line.graph.getOrElse { return List.empty }
 
-      var insts =
+      def srlie(graph: DependencyGraph) =
         try {
           extractor.synchronized { extractor.apply(graph) }
         } catch {
@@ -116,7 +114,8 @@ object ExtractionPopulator {
         }
 
       for {
-        inst <- insts.toList
+        graph <- line.graph.toList
+        inst <- srlie(graph)
         extr = inst.extr
         conf = confFunc.getConf(inst)
 
