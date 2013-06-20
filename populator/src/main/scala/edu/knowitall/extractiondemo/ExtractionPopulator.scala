@@ -36,7 +36,6 @@ import edu.knowitall.ollie.confidence.OllieConfidenceFunction
 import edu.knowitall.taggers.tag.TaggerCollection
 import edu.knowitall.tool.conf.impl.LogisticRegression
 
-object srlMutex { }
 
 object ExtractionPopulator {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -107,7 +106,7 @@ object ExtractionPopulator {
       
       var insts: Seq[SrlExtractionInstance] = null;
       
-      insts = srlMutex.synchronized {
+      insts = this.synchronized {
         try {
           extractor.apply(graph).flatMap(_.triplize(true)).filter(_.extr.arg2s.size == 1)
         } catch {
