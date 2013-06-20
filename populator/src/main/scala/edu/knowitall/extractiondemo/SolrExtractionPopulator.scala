@@ -100,7 +100,7 @@ object SolrExtractionPopulator {
           solr.add(doc)
           if (numDocs.incrementAndGet() % batchSize * batchesPerCommit == 0) {
             solr.commit()
-            System.err.println("%d docs indexed.".format(numDocs.get()))
+            logger.info("%d docs indexed.".format(numDocs.get()))
           }
         }
       }
@@ -120,10 +120,12 @@ object SolrExtractionPopulator {
           case e: Exception => "unknown"
         }
         extractor.extractAndPersist(file, corpus)
+        solr.commit()
         println()
       } catch {
         case e: Throwable => e.printStackTrace()
       }
+      solr.shutdown()
     }
   }
 }
