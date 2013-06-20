@@ -108,7 +108,7 @@ object ExtractionPopulator {
       
       insts = this.synchronized {
         try {
-          extractor.apply(graph).flatMap(_.triplize(true)).filter(_.extr.arg2s.size == 1)
+          extractor.apply(graph)
         } catch {
           case e: Throwable => {
             System.err.println("SrlExtractor error(%d) on: %s".format(errorCounter.getAndIncrement(), line.debugText))
