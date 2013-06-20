@@ -1,5 +1,7 @@
 name := "extraction-populator"
 
+organization := "edu.knowitall"
+
 version := "1.0.0-SNAPSHOT"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
