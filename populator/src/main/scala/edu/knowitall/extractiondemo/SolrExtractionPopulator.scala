@@ -123,7 +123,8 @@ object SolrExtractionPopulator {
       } catch {
         case e: Throwable => e.printStackTrace()
       }
-      solr.shutdown()
     }
+
+    solr.shutdown()
   }
 }
