@@ -70,7 +70,7 @@ object SolrExtractionPopulator {
 
     val batchSize = 1000
     val batchesPerCommit = 10
-    
+
     val solr = new ConcurrentUpdateSolrServer(settings.solrUrl, batchSize, 8)
 
     val writer = settings.outputFile.map(new java.io.PrintWriter(_))
@@ -96,10 +96,9 @@ object SolrExtractionPopulator {
           doc.addField("extractor", extr.extractor)
           doc.addField("url", sentenceEntity.document.path)
           doc.addField("corpus", sentenceEntity.document.corpus)
-          
+
           solr.add(doc)
           if (numDocs.incrementAndGet() % batchSize * batchesPerCommit == 0) {
-            solr.commit()
             logger.info("%d docs indexed.".format(numDocs.get()))
           }
         }
@@ -120,12 +119,12 @@ object SolrExtractionPopulator {
           case e: Exception => "unknown"
         }
         extractor.extractAndPersist(file, corpus)
-        solr.commit()
         println()
       } catch {
         case e: Throwable => e.printStackTrace()
       }
-      solr.shutdown()
     }
+
+    solr.shutdown()
   }
 }
