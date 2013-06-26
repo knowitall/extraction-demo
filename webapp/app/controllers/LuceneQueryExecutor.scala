@@ -12,6 +12,14 @@ object LuceneQueryExecutor {
   val solrUrl = current.configuration.getString("db.solr.url").get
   Logger.info("SOLR Url: " + solrUrl)
 
+  def fullLuceneQueryString(query: Query): String = {
+    LuceneQueryExecutor.luceneQueryVariables(query).foldLeft(
+      LuceneQueryExecutor.luceneQueryString(query)) {
+        case (query, (field, value)) =>
+          query.replaceAll("%" + field + "%", "\"" + value + "\"")
+      }
+  }
+
   def luceneQueryString(q: Query): String = {
     val strings =
       q.usedStrings.map { p => p.string.zipWithIndex.map

@@ -1,4 +1,4 @@
-@(form: Form[Query], advancedForm: Form[AdvancedQuery], results: Option[ResultSet] = None, queryString: Option[String] = None)
+@(form: Form[Query], advancedForm: Form[AdvancedQuery], advanced: Boolean = false, results: Option[ResultSet] = None, queryString: Option[String] = None)
 
 @helper.main("Open Information Extractions") {
   <body>
@@ -17,9 +17,19 @@
           } else {No error returned.}
       </div>
   }
+  @if(advancedForm.hasErrors) {
+      <div class="alert alert-error">
+          <a class="close" data-dismiss="alert">x</a>
+          @if(advancedForm.errors.size > 0) {
+            @for(advancedFormError <- advancedForm.errors) {
+              @advancedFormError.message.toString()
+            }
+          } else {No error returned.}
+      </div>
+  }
 
   <!-- search form -->
-  <div id="simple">
+  <div id="simple" @if(advanced){ style="display: none"}>
   @helper.form(action = routes.Application.submit, 'class -> "well form-search") {
     <div class="offset8">simple <a href="#" onclick="$('div:#simple').hide(); $('div:#advanced').show();">advanced</a></div>
     <!--
@@ -82,18 +92,18 @@
     </div>
   }
   </div>
-  <div id="advanced" style="display: none">
+  <div id="advanced"@if(!advanced){ style="display: none"}>
   @helper.form(action = routes.Application.submitAdvanced, 'class -> "well form-search") {
     <div class="offset8"><a href="#" onclick="$('div:#advanced').hide(); $('div:#simple').show();">simple</a> advanced</div>
     <div class="form-wrapper">
       @helper.inputText(
-          form("query"),
+          advancedForm("query"),
           '_class -> "dl-horizontal",
           '_label -> "Advanced:",
           'placeholder -> "solr query")
 
       @helper.inputRadioGroup(
-        form("groupBy"),
+        advancedForm("groupBy"),
         options = ExtractionPart.parts.map(part => (part.short, part.name)),
         'id -> "groupByAdvanced",
         '_class -> "dl-horizontal",

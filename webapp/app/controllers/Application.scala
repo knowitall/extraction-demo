@@ -118,20 +118,17 @@ object Application extends Controller {
 
   def searchResult(query: Query) = {
     val instances = LuceneQueryExecutor.execute(query)
-    val queryString = LuceneQueryExecutor.luceneQueryVariables(query).foldLeft(
-      LuceneQueryExecutor.luceneQueryString(query)) {
-        case (query, (field, value)) =>
-          query.replaceAll("%" + field + "%", "\"" + value + "\"")
-      }
+    val queryString = LuceneQueryExecutor.fullLuceneQueryString(query)
+
     val groups = ExtractionGroup.from(query.groupBy, instances)
-    Ok(views.html.search(searchForm.fill(query), advancedSearchForm, Some(ResultSet(groups)), Some(queryString)))
+    Ok(views.html.search(searchForm.fill(query), advancedSearchForm.fill(AdvancedQuery(LuceneQueryExecutor.fullLuceneQueryString(query), query.groupBy)), false, Some(ResultSet(groups)), Some(queryString)))
   }
 
   def searchResult(query: AdvancedQuery) = {
     val queryString = query.queryString
     val instances = LuceneQueryExecutor.execute(queryString)
     val groups = ExtractionGroup.from(query.groupBy, instances).toList.sortBy(-_.instances.size)
-    Ok(views.html.search(defaultSearchForm, advancedSearchForm.fill(query), Some(ResultSet(groups)), Some(queryString)))
+    Ok(views.html.search(defaultSearchForm, advancedSearchForm.fill(query), true, Some(ResultSet(groups)), Some(queryString)))
   }
 
   def search(arg1: Option[String], rel: Option[String], arg2: Option[String]) = Action {
