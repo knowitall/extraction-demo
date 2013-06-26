@@ -87,9 +87,9 @@ object SolrExtractionPopulator {
           doc.addField("arg1_postag", extr.sentence.tokens(extr.arg1Interval).map(_.postag).mkString(" ") )
           doc.addField("rel_postag", extr.sentence.tokens(extr.relInterval).map(_.postag).mkString(" ") )
           doc.addField("arg2_postag", extr.sentence.tokens(extr.arg2Interval).map(_.postag).mkString(" ") )
-          extr.arg1Types(sentenceEntity.types).foreach { typ => doc.addField("arg1_types", typ) }
-          extr.relTypes(sentenceEntity.types).foreach { typ => doc.addField("rel_types", typ) }
-          extr.arg2Types(sentenceEntity.types).foreach { typ => doc.addField("arg2_types", typ) }
+          extr.arg1Types(sentenceEntity.types).foreach { typ => doc.addField("arg1_types", typ.descriptor) }
+          extr.relTypes(sentenceEntity.types).foreach { typ => doc.addField("rel_types", typ.descriptor) }
+          extr.arg2Types(sentenceEntity.types).foreach { typ => doc.addField("arg2_types", typ.descriptor) }
           doc.addField("context", "")
           doc.addField("confidence", extr.confidence)
           doc.addField("sentence", sentenceEntity.text)
