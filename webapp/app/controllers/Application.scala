@@ -121,14 +121,14 @@ object Application extends Controller {
     val queryString = LuceneQueryExecutor.fullLuceneQueryString(query)
 
     val groups = ExtractionGroup.from(query.groupBy, instances)
-    Ok(views.html.search(searchForm.fill(query), advancedSearchForm.fill(AdvancedQuery(LuceneQueryExecutor.fullLuceneQueryString(query), query.groupBy)), false, Some(ResultSet(groups)), Some(queryString)))
+    Ok(views.html.search(searchForm.fill(query), advancedSearchForm.fill(AdvancedQuery(LuceneQueryExecutor.fullLuceneQueryString(query), query.groupBy)), false, Some(ResultSet(groups)), Some(AdvancedQuery(queryString, query.groupBy))))
   }
 
   def searchResult(query: AdvancedQuery) = {
     val queryString = query.queryString
     val instances = LuceneQueryExecutor.execute(queryString)
     val groups = ExtractionGroup.from(query.groupBy, instances).toList.sortBy(-_.instances.size)
-    Ok(views.html.search(defaultSearchForm, advancedSearchForm.fill(query), true, Some(ResultSet(groups)), Some(queryString)))
+    Ok(views.html.search(defaultSearchForm, advancedSearchForm.fill(query), true, Some(ResultSet(groups)), Some(query)))
   }
 
   def evaluate(groupByString: String, query: String) = Action {

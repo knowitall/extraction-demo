@@ -1,9 +1,9 @@
-@(results: ResultSet, queryString: Option[String])
+@(results: ResultSet, query: Option[AdvancedQuery])
 
 <p>
 <div>
-@queryString match{
-  case Some(queryString) => { <b>Query:</b> @queryString }
+@query match{
+  case Some(query) => { <b>Query:</b> @query.queryString (<a href="@routes.Application.evaluate(query.groupBy.toString, query.queryString)">evaluate</a>) }
   case None => { }
 }
 </div>
