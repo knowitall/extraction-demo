@@ -7,9 +7,9 @@ sealed abstract class ExtractionPart(val name: String, val short: String) {
 }
 object ExtractionPart {
   def parse(string: String) = string match {
-    case "arg1" => Argument1
-    case "rel" => Relation
-    case "arg2" => Argument2
+    case "arg1" | "Argument1" => Argument1
+    case "rel" | "Relation" => Relation
+    case "arg2" | "Argument2" => Argument2
   }
 
   val default = Argument1
