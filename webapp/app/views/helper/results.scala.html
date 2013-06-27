@@ -12,7 +12,8 @@
 </p>
 @for((result, i) <- results.groups.zipWithIndex) {
   <div id="group-title-@i" class="group-title">
-    <h4><a href="#" onclick="javascript:$('#group-container-@i').toggle(); return false;"><span id="group-title">@result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
+    <h4><a href="#" onclick="javascript:$('#group-container-@i').toggle(); return false;"><span id="group-title">@{i+1}. @result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
+    
     <a class="open-close"></a>
   </div>
 
