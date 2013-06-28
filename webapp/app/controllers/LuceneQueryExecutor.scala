@@ -59,11 +59,11 @@ object LuceneQueryExecutor {
     val result = client.query(queryString)
       .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "corpus", "confidence")
       .rows(10000)
-      .getResultAs[ExtractionInstance](queryVariables)
+      .getResultAsMap(queryVariables)
 
     val list = result.documents.toList
     Logger.info("results received: " + list.size)
-    list
+    list.map(ExtractionInstance.fromMap)
   }
 
   def executeExact(arg1: String, rel: String, arg2s: Seq[String]) = {
@@ -81,11 +81,11 @@ object LuceneQueryExecutor {
     val result = client.query(queryString)
       .fields("arg1", "rel", "arg2", "arg1_types", "rel_types", "arg2_types", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
       .rows(10000)
-      .getResultAs[ExtractionInstance](Map("arg1" -> arg1, "rel" -> rel, "arg2" -> arg2))
+      .getResultAsMap(Map("arg1" -> arg1, "rel" -> rel, "arg2" -> arg2))
 
     val list = result.documents.toList
     Logger.info("sentence extractions received: " + list.size)
-    list
+    list.map(ExtractionInstance.fromMap)
   }
 
   def execute(q: String) = {
@@ -100,10 +100,10 @@ object LuceneQueryExecutor {
     val result = client.query(q)
       .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
       .rows(10000)
-      .getResultAs[ExtractionInstance]()
+      .getResultAsMap()
 
     val list = result.documents.toList
     Logger.info("results received: " + list.size)
-    list
+    list.map(ExtractionInstance.fromMap)
   }
 }

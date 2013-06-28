@@ -28,6 +28,6 @@ case object Relation extends ExtractionPart("Relation", "rel") {
 }
 case object Argument2 extends ExtractionPart("Argument 2", "arg2") {
   def postags(instance: ExtractionInstance): String = instance.arg2Postag
-  def apply(instance: ExtractionInstance): Seq[String] = instance.arg2Seq
+  def apply(instance: ExtractionInstance): Seq[String] = instance.arg2s
   def apply(query: Query): PartQuery = query.arg2
 }
