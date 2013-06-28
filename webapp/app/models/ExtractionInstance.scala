@@ -4,7 +4,7 @@ import java.util.ArrayList
 
 import scala.collection.JavaConverters._
 
-case class ExtractionInstance(arg1: String, rel: String, arg2s: Seq[String], arg1Types: Seq[String], relTypes: Seq[String], arg2Types: Seq[String], arg1_postag: String, rel_postag: String, arg2_postag: String, sentence: String, url: String, extractor: String, confidence: Double, count: Int) {
+case class ExtractionInstance(ids: List[String], arg1: String, rel: String, arg2s: Seq[String], arg1Types: Seq[String], relTypes: Seq[String], arg2Types: Seq[String], arg1_postag: String, rel_postag: String, arg2_postag: String, sentence: String, url: String, extractor: String, confidence: Double, count: Int) {
   def arg1s = Seq(arg1)
   def rels = Seq(rel)
 
@@ -51,7 +51,7 @@ object ExtractionInstance {
   def fromMap(map: Map[String, Any]) = {
     def toScalaSeq[T](arraylist: ArrayList[T]): Seq[T] = Option(arraylist).map(_.asScala.toSeq).getOrElse(Seq.empty)
     def optToScalaSeq[T](arraylist: Option[ArrayList[T]]): Seq[T] = arraylist.map(_.asScala.toSeq).getOrElse(Seq.empty)
-    new ExtractionInstance(map("arg1").asInstanceOf[String], map("rel").asInstanceOf[String], toScalaSeq(map("arg2").asInstanceOf[ArrayList[String]]),
+    new ExtractionInstance(List(map("id").asInstanceOf[String]), map("arg1").asInstanceOf[String], map("rel").asInstanceOf[String], toScalaSeq(map("arg2").asInstanceOf[ArrayList[String]]),
         optToScalaSeq(map.get("arg1_types").map(_.asInstanceOf[ArrayList[String]])), optToScalaSeq(map.get("rel_types").map(_.asInstanceOf[ArrayList[String]])), optToScalaSeq(map.get("arg2_types").map(_.asInstanceOf[ArrayList[String]])),
         map("arg1_postag").asInstanceOf[String], map("rel_postag").asInstanceOf[String], map("arg2_postag").asInstanceOf[String],
         map("sentence").asInstanceOf[String], map("url").asInstanceOf[String], map("extractor").asInstanceOf[String], map("confidence").asInstanceOf[Double], 1)

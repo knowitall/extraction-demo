@@ -8,7 +8,7 @@ object ExtractionGroup {
   def from(part: ExtractionPart, instances: List[ExtractionInstance]) = {
     // deduplicate and count instances
     val deduped = instances.groupBy(inst => Iterable(inst.arg1, inst.rel, inst.arg2s).mkString(" ").replaceAll("\\s+", "")).map { case (tuple, list) =>
-      list.head.copy(count = list.size)
+      list.head.copy(count = list.size, ids = list.flatMap(_.ids))
     }
 
     // group instances by the grouping part

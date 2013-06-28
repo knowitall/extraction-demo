@@ -57,7 +57,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene variables: " + queryVariables)
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "corpus", "confidence")
+      .fields("id", "arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "corpus", "confidence")
       .rows(10000)
       .getResultAsMap(queryVariables)
 
@@ -79,9 +79,30 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene variables: " + (List("arg1", "rel", "arg2") zip List(arg1, rel, arg2)))
 
     val result = client.query(queryString)
-      .fields("arg1", "rel", "arg2", "arg1_types", "rel_types", "arg2_types", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
+      .fields("id", "arg1", "rel", "arg2", "arg1_types", "rel_types", "arg2_types", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
       .rows(10000)
       .getResultAsMap(Map("arg1" -> arg1, "rel" -> rel, "arg2" -> arg2))
+
+    val list = result.documents.toList
+    Logger.info("sentence extractions received: " + list.size)
+    list.map(ExtractionInstance.fromMap)
+  }
+
+  def executeIds(ids: Seq[String]) = {
+    Logger.info("sentenes for: " + ids)
+    import jp.sf.amateras.solr.scala._
+
+    val client = new SolrClient(solrUrl)
+
+    val queryString = ids.zipWithIndex.map { case (id, i) => s"id:%id$i%" }.mkString(" OR ")
+    val queryVariables = ids.zipWithIndex.map { case (id, i) => s"id$i" -> id }.toMap
+    Logger.logger.debug("Lucene query: " + queryString)
+    Logger.logger.debug("Lucene variables: " + queryVariables)
+
+    val result = client.query(queryString)
+      .fields("id", "arg1", "rel", "arg2", "arg1_types", "rel_types", "arg2_types", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
+      .rows(10000)
+      .getResultAsMap(queryVariables)
 
     val list = result.documents.toList
     Logger.info("sentence extractions received: " + list.size)
@@ -98,7 +119,7 @@ object LuceneQueryExecutor {
     Logger.logger.debug("Lucene query: " + q)
 
     val result = client.query(q)
-      .fields("arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
+      .fields("id", "arg1", "rel", "arg2", "arg1_postag", "rel_postag", "arg2_postag", "sentence", "url", "extractor", "confidence")
       .rows(10000)
       .getResultAsMap()
 

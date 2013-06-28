@@ -146,8 +146,8 @@ object Application extends Controller {
     searchResult(query)
   }
 
-  def sentences(arg1: String, rel: String, arg2s: Seq[String]) = Action {
-    val extrs = LuceneQueryExecutor.executeExact(arg1, rel, arg2s)
+  def sentences(ids: Seq[String]) = Action {
+    val extrs = LuceneQueryExecutor.executeIds(ids)
     Ok(views.html.sentences(extrs))
   }
 }
