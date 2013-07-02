@@ -68,7 +68,7 @@
 
       @helper.select(
         form("extractor"), 
-        options=("" -> "All") +: (Query.extractors zip Query.extractors),
+        options=("" -> "Open IE 4.0") +: Query.extractors,
         '_class -> "dl-horizontal",
         '_label -> "Extractor:")
 

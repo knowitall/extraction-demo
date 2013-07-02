@@ -66,6 +66,6 @@ object Query {
         extractor, corpus, groupBy)
   }
 
-  val extractors = List("ReVerb", "R2A2", "Relnoun", "SRL")
+  val extractors = List("Relnoun" -> "-- Relnoun", "SRL" -> "-- SRLIE")
   val corpora = List("CBP", "DEA", "Gigaword", "ICE", "SDN", "TOSIG")
 }
