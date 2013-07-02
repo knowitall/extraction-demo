@@ -26,10 +26,14 @@ object LuceneQueryExecutor {
         { case (string, i) => "+" + p.part.short + ":%" + p.part.short + "_" + i + "%" }.mkString(" ")
       }
     val i = new AtomicInteger(0)
-    val types =
-      q.usedTypes.flatMap { p => p.typ.map { typ =>
-        "+(" + Application.typeHierarchy.baseTypes(typ).map { case typ => p.part.short + "_types:%" + p.part.short + "_types_" + i.getAndIncrement() + "%" }.mkString(" OR ") + ")"
-      }}
+    val types = {
+      for {
+        part <- q.usedTypes
+        typ <- part.typ
+      } yield {
+        "+(" + Application.typeHierarchy.baseTypes(typ).zipWithIndex.map{ case (typ, i) => part.part.short + "_types:%" + part.part.short + "_types_" + i + "%" }.mkString(" OR ") + ")"
+      }
+    }
     val extractor = q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" }
     val corpus = q.corpus match { case Some(ex) => " +corpus:%corpus%" case None => "" }
 
