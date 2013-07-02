@@ -36,10 +36,10 @@ object PartQuery {
   val empty = PartQuery(Seq.empty, Seq.empty, ExtractionPart.default)
   def fromEntry(entry: String, part: ExtractionPart) = {
     val (strings, types) =
-      entry.split("""\s*;\s*""").foldLeft(List.empty[String], List.empty[String]) {
+      entry.split("""\s*;\s*""").foldLeft(IndexedSeq.empty[String], IndexedSeq.empty[String]) {
         case ((strings, types), entry) => entry match {
-          case typeRegex(typ) => (strings, typ :: types)
-          case string => (string :: strings, types)
+          case typeRegex(typ) => (strings, types :+ typ)
+          case string => (strings :+ string, types)
         }
     }
 
