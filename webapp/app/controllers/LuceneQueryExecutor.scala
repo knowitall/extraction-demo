@@ -37,7 +37,7 @@ object LuceneQueryExecutor {
     val extractor = q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" }
     val corpus = q.corpus match { case Some(ex) => " +corpus:%corpus%" case None => "" }
 
-    (strings ++ types ++ extractor ++ corpus).mkString(" ")
+    (strings ++ types :+ extractor :+ corpus).mkString(" ")
   }
 
   def luceneQueryVariables(q: Query): Map[String, String] =
