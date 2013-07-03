@@ -3,7 +3,7 @@
 <p>
 <div>
 @query match{
-  case Some(query) => { <b>Query:</b> @query.queryString (<a href="@routes.Application.evaluate(query.groupBy.toString, query.queryString)">evaluate</a>) }
+  case Some(query) => { <b>Query:</b> @query.queryString (<a href="@routes.Application.evaluate(query.groupBy.toString, query.queryString.replaceAll("\\+", "%2B"))">evaluate</a>) }
   case None => { }
 }
 </div>
@@ -13,7 +13,7 @@
 @for((result, i) <- results.groups.zipWithIndex) {
   <div id="group-title-@i" class="group-title">
     <h4><a href="#" onclick="javascript:$('#group-container-@i').toggle(); return false;"><span id="group-title">@{i+1}. @result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
-    
+
     <a class="open-close"></a>
   </div>
 
