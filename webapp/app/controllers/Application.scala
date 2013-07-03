@@ -137,7 +137,7 @@ object Application extends Controller {
     val groups = ExtractionGroup.from(groupBy, instances).toList.sortBy(-_.instances.size)
     Ok(groups.zipWithIndex.map { case (group, i) =>
       val head = group.instances.head
-      Iterable(i, head.arg1, head.rel, head.arg2s, head.sentence, groupBy, query).mkString("\t")
+      Iterable(i, head.arg1, head.rel, head.arg2s.mkString("; "), head.sentence, groupBy, query).mkString("\t")
     }.mkString("\n"))
   }
 
