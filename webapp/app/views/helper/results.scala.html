@@ -12,13 +12,17 @@
 </p>
 @for((result, i) <- results.groups.zipWithIndex) {
   <div id="group-title-@i" class="group-title">
-    <h4><a href="#" onclick="javascript:$('#group-container-@i').toggle(); return false;"><span id="group-title">@{i+1}. @result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
-
+    <h4>
+      @if(result.instances.size>1){
+        <a href="#" onclick="javascript:$('#group-container-@i').toggle(); return false;"><span id="group-title">@{i+1}. @result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></a></h4>
+      }else{
+        <span id="group-title">@{i+1}. @result.title</span> <span style="font-weight:normal;">(<span id="group-count">@result.instances.size</span>)</span></h4>
+      }
     <a class="open-close"></a>
   </div>
 
-  <div id="group-container-@i" class="resultgroup-list" @if(results.groups.take(i).iterator.map(_.instances.size).sum > 50) { style="display: none;" }>
-    @for(instance <- result.instances) {
+  <div id="group-outer-@i" class="resultgroup-list">
+    @for(instance <- result.instances.headOption) {
     <div id="resultgroup-list">
       <span id="arg1" class="result-arg1">@instance.arg1String</span>
       <span id="rel" class="result-relation">@instance.relString</span>
@@ -26,5 +30,15 @@
       <a id="source" target="_blank" href="@routes.Application.sentences(instance.ids)">(<span id="count">@instance.count</span>)</a>
     </div>
     }
+  <div id="group-container-@i" @if(results.groups.take(i).iterator.map(_.instances.size).sum > 50) { style="display: none;" }>
+    @for(instance <- result.instances.tail) {
+    <div id="resultgroup-list">
+      <span id="arg1" class="result-arg1">@instance.arg1String</span>
+      <span id="rel" class="result-relation">@instance.relString</span>
+      <span id="arg2" class="result-arg2">@instance.arg2String</span>
+      <a id="source" target="_blank" href="@routes.Application.sentences(instance.ids)">(<span id="count">@instance.count</span>)</a>
+    </div>
+    }
+  </div>
   </div>
 }
