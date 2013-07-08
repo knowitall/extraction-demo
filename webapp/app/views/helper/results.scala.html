@@ -30,7 +30,7 @@
       <a id="source" target="_blank" href="@routes.Application.sentences(instance.ids)">(<span id="count">@instance.count</span>)</a>
     </div>
     }
-  <div id="group-container-@i" @if(results.groups.take(i).iterator.map(_.instances.size).sum > 50) { style="display: none;" }>
+  <div id="group-container-@i" style="display: none;">
     @for(instance <- result.instances.tail) {
     <div id="resultgroup-list">
       <span id="arg1" class="result-arg1">@instance.arg1String</span>
