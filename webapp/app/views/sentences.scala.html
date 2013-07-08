@@ -10,7 +10,7 @@
 @helper.main("Open Information Extraction") {
 
   <h1>Sentences</h1>
-  <h2>(@extrs.head.arg1, @extrs.head.rel, @extrs.head.arg2s)</h2>
+  <h2>(@extrs.head.arg1, @extrs.head.rel, @extrs.head.arg2s.mkString("; "))</h2>
 
   <br />
 
